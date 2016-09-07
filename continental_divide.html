@@ -80,72 +80,78 @@ input[type="number"] { width: 40px; }
 
 <div class="row">
 
-  <div class=".col-xs-12 .col-sm-6 .col-md-8">
+  <div class=".col-xs-12 .col-sm-6 .col-md-8 company_pane">
     <h2>Company</h2>
-    
-    <div class="company"  >
+    <div class="company">
       <button class="btn blue ">Blue</button>
       <button class="btn red ">Red</button>
       <button class="btn yellow ">Yellow</button>
       <button class="btn pink ">Pink</button>
-      <button class="btn green ">Green</button>
-      
+      <button class="btn green ">Green</button>      
       <button class="btn purple ">Purple</button>
       <button class="btn brown ">Brown</button>
       <button class="btn black ">Black</button>
-
     </div>
 
 
-    <div class="stock_value"> 
-          <span>Stock Value</span> 
-          <span><div class="input-group spinner"> 
+    <div class="stock_value step1"> 
+      <span>Stock Value</span> 
+      <span>
+        <div class="input-group spinner"> 
           <input type="text" class="form-control" value="0" > 
-      <div class="input-group-btn-vertical"> 
-        <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></a> 
-        <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></a> 
-      </div> 
-    </div></span> 
-        </div> 
-        <div class="stocks_issued"> 
-          <span>Stocks Issued</span> 
-          <span><div class="input-group spinner"> 
-      <input type="text" class="form-control" value="0" > 
-      <div class="input-group-btn-vertical"> 
-        <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></a> 
-        <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></a> 
-      </div> 
-    </div></span> 
-        </div> 
-        <button type="button" class="btn btn-primary setCompanyStock" autocomplete="off"> 
-          Set 
-        </button> 
-        <div class="rr_income hidden"> 
-          <span>RR Income</span> 
-          <span><div class="input-group spinner"> 
-      <input type="text" class="form-control" value="0" > 
-      <div class="input-group-btn-vertical"> 
-        <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></a> 
-        <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></a> 
-      </div> 
-    </div></span> 
-        </div> 
-        <div class="rr_treasury hidden"> 
-          <span>RR Treasury</span> 
-          <span id="rr_treasury__val">0</span> 
-        </div> 
-        <div class="current_dividend hidden"> 
-          <span>Dividend</span> 
-          <span id="current_dividend__val">0</span> 
-        </div> 
-        <div class="stock_price hidden"> 
-          <span>Stock Price</span> 
-          <span id="stock_price__val">0</span> 
-        </div> 
-        <div class="dividend_payment hidden"> 
-          <span>Div Pmt</span> 
-          <span id="dividend_payment__val">0</span> 
+          <div class="input-group-btn-vertical"> 
+            <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></a> 
+            <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></a> 
+          </div> 
         </div>
+      </span> 
+    </div> 
+
+    <div class="stocks_issued step1"> 
+      <span>Stocks Issued</span> 
+      <span>
+        <div class="input-group spinner"> 
+          <input type="text" class="form-control" value="0" > 
+          <div class="input-group-btn-vertical"> 
+            <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></a> 
+            <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></a> 
+          </div> 
+        </div>
+      </span> 
+    </div> 
+
+    <button type="button" class="btn btn-primary setCompanyStock" autocomplete="off"> 
+      Set 
+    </button> 
+        
+    <div class="rr_income hidden step2"> 
+      <span>RR Income</span> 
+      <span>
+        <div class="input-group spinner"> 
+          <input type="text" class="form-control" value="0" > 
+          <div class="input-group-btn-vertical"> 
+            <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></a> 
+            <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></a> 
+          </div> 
+        </div>
+      </span> 
+    </div> 
+    <div class="rr_treasury hidden step2"> 
+      <span>RR Treasury</span> 
+      <span id="rr_treasury__val">0</span> 
+    </div> 
+    <div class="current_dividend hidden step2"> 
+      <span>Dividend</span> 
+      <span id="current_dividend__val">0</span> 
+    </div> 
+    <div class="stock_price hidden step2"> 
+      <span>Stock Price</span> 
+      <span id="stock_price__val">0</span> 
+    </div> 
+    <div class="dividend_payment hidden step2"> 
+      <span>Div Pmt</span> 
+      <span id="dividend_payment__val">0</span> 
+    </div>
 
   </div>
 </div>
@@ -166,12 +172,13 @@ input[type="number"] { width: 40px; }
       <div class="modal-body">
         Username: <input type="text" id="username">
         <div class="dropdown">
-          <button class="btn btn-default dropdown-toggle" type="button" id="available_games_dd" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-            Dropdown
-            <span class="caret"></span>
-          </button>
-          <ul class="dropdown-menu" aria-labelledby="available_games_dd">
-            
+          <a href="#" class="btn btn-primary dropdown-toggle" id="available_games_dd" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Dropdown <span class="caret"></span> </a>
+          <div class="panel panel-default">
+            <div class="panel-body">
+              
+            </div>
+          </div>
+          <ul class="dropdown-menu" aria-labelledby="available_games_dd">            
           </ul>
         </div>
       </div>
@@ -191,49 +198,49 @@ input[type="number"] { width: 40px; }
 
   var socket = io();
   var game_name = 'continental_divide';
-
-  var user = localStorage.getItem("game-scoring--username");
-
-
-
-  socket.on('save username', function(msg){
-    $('.log').append($('<li>').text(msg));
-  }); 
-
-$( document ).ready(function() {
+  var game_oid;
+  var user = localStorage.getItem("game-scoring--username"); 
   var companies = ['blue','red', 'yellow', 'pink', 'green', 'brown', 'purple', 'black', ''];
 
-  socket.emit('available_games', game_name);
+  var connected_users = [];
 
-  socket.on('available_games', function(games){
-    console.log(games);
-    var html = '';
-    for(var x=0,len=games.length;x<len;x++){
-      console.log(games[x]);
-      html += '<li>'+games[x].game+' - '+games[x].date+'</li>';
-    }
-    $('.dropdown-menu[aria-labelledby="available_games_dd"]').html(html);
-  });
+$( document ).ready(function() {
+  socket.emit('available_games', {name: game_name});
 
   $('#modal--username').modal({
     show:true
   });
+
+  if(user !== undefined && user !== null && user != ''){
+    $("#username").val(user);
+  } else {
+    $('#modal--username').modal('toggle');
+  }
 
   $(".company .btn").click(function(){
     $(".company .btn").removeClass('active');
     $(this).toggleClass('active');
   });
 
-  // if(user === null || user === undefined || user == ''){
-  //   $('#modal--username').modal('toggle');
-  // }
-
   $("#modal--username button").click(function(event){
-    localStorage.setItem("game-scoring--username", $("#username").val() );
+    var _id = $('.dropdown.open .dropdown-toggle').data('oid');
+      if($("#username").val() == '' || _id === undefined){
+        alert_msg('modal-body', 'Please enter your username & game preference.');
+      } else {
+        localStorage.setItem("game-scoring--username", $("#username").val() );
+        var action = (_id == 'new') ? 'add_game_instance' : 'join_game_instance';
 
-    user = localStorage.getItem("game-scoring--username");
-    socket.emit('save username', user);
-    $('#modal--username').modal('toggle');
+        socket.emit('save username', $("#username").val());
+        socket.emit(action, 
+          { 
+            game: {
+              name: game_name, _id: $('.dropdown.open .dropdown-toggle').data('oid') 
+            },
+            user: $("#username").val()
+          }
+        );
+        $('#modal--username').modal('toggle');
+      }  
   });
 
   $(".setCompanyStock").click(function(){
@@ -241,17 +248,10 @@ $( document ).ready(function() {
     var si = parseInt($(this).parent().find('.stocks_issued input').val(), 10);
     if( (sv >= 10 && sv <=50) && (si >=3 && si <= 10) ){
       $(this).toggleClass('hidden');
-      $(this).parent().find('.stocks_issued').toggleClass('hidden');
-      $(this).parent().find('.stock_value').toggleClass('hidden');
-
-      $(this).parent().find('.rr_income ').toggleClass('hidden');
-      $(this).parent().find('.rr_treasury').toggleClass('hidden');
-      $(this).parent().find('.current_dividend').toggleClass('hidden');
-      $(this).parent().find('.stock_price').toggleClass('hidden');
-      $(this).parent().find('.dividend_payment').toggleClass('hidden');
-
+      $('.step1').toggleClass('hidden');
+      $('.step2').toggleClass('hidden');
     } else {
-      $(this).parent().prepend('<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>Stocks Issued must be 3-10 & Stock Value must be 10-50.</div>');
+      alert_msg('company_pane', 'Stocks Issued must be 3-10 & Stock Value must be 10-50.');
     }
   });
 
@@ -284,49 +284,36 @@ $( document ).ready(function() {
   });
 
   function update(){
-    calcDividend();
-    calcStockPrice();
-    calcDividendPayment();
-
     socket.emit('update_company', {
-      company: $(".company .btn.active").text(),
+      company: $(".company .btn.active").text().toLowerCase(),
       stocks_issued: parseInt($(".stocks_issued input").val()),
       rr_income: parseInt($(".rr_income input").val()),
-      current_dividend: parseInt($("#current_dividend__val").text()),
-      stock_value: parseInt($(".stock_value input").val()),
-      stock_price: parseInt($("#stock_price__val").text()),
-      dividend_payment: parseInt($('#dividend_payment__val').text())
+      stock_value: parseInt($(".stock_value input").val())
     });
   }
 
+});
 
-  function calcDividend(){
-    var si = parseInt($(".stocks_issued input").val());
-    var ri = parseInt($(".rr_income input").val());
+function alert_msg(klass, msg){
+  $('.'+klass).prepend('<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>'+msg+'</div>');
+}
 
-    var dividend = Math.ceil( parseFloat(ri/si) );
-    $("#current_dividend__val").html(dividend);
+function log_actions(msg){
+  $('.log').append($('<li>').text(msg));
+}
+
+/******** Socket IO commands *****/
+
+socket.on('available_games', function(games){    
+  var html = '<li role="presentation" class="dropdown"><a href="#" class="dropdown-toggle" id="new_instance" data-toggle="dropdown" data-oid="new" role="button" aria-haspopup="true" aria-expanded="false">+ Add New Instance</a></li>';
+  for(var x=0,len=games.length;x<len;x++){
+    html += '<li role="presentation" class="dropdown"><a href="#" class="dropdown-toggle" id="'+games[x].name+'_'+games[x].date+'" data-oid="'+games[x]._id+'" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">'+games[x].name+' - '+games[x].date+'</a></li>';
   }
+  $('.dropdown-menu[aria-labelledby="available_games_dd"]').html(html);
+});
 
-  function calcStockPrice(company){
-    var sv = parseInt($(".stock_value input").val());
-    var dv = parseInt($("#current_dividend__val").text());
-
-    var stock_price = sv+dv
-    $("#stock_price__val").html(stock_price);
-  }
-
-  function calcDividendPayment(company){
-    var dv = parseInt($("#current_dividend__val").text());
-    var si = parseInt($(".stocks_issued input").val());
-
-    var outstanding_stock = 0;
-
-    $('#dividend_payment__val').html( (si - outstanding_stock) * dv );
-  }
-
-
-
+socket.on('joined_game', function(msg){
+  log_actions(msg.users.pop()+' has joined the game');
 });
 
 </script>
