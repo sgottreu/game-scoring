@@ -8,7 +8,9 @@ var moment = require('moment');
 
 
 var mongodb_config = (process.env.mongodb) ? process.env.mongodb : process.argv[2];
-const db = monk('mongodb://'+mongodb_config);
+var mongo_url = 'mongodb://'+mongodb_config;
+
+const db = monk(mongo_url);
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/continental_divide.html');
@@ -18,8 +20,16 @@ app.get('/', function(req, res){
 io.on('connection', function(socket){
   console.log('client connected');
 
-  socket.on('available_games', function(){
-  	emitAvailableGames(io);
+  socket.on('add_game_instance', function(obj){
+    addGameInstance(io, obj);
+  });
+
+  socket.on('join_game_instance', function(obj){
+    joinGameInstance(io, obj);
+  });
+
+  socket.on('available_games', function(game){
+  	emitAvailableGames(io, game);
   });
 
   socket.on('disconnect', function(){
@@ -39,16 +49,66 @@ io.on('connection', function(socket){
 });
 
 
-function emitAvailableGames(io){
+function emitAvailableGames(io, game){
 	var available_games = db.get('game-scoring--games');
-  available_games.find({}).then(function(docs) {
-		for(var x=0,len=docs.length;x<len;x++){
+  available_games.find({ name: game.name }).then(function(docs) {
+    for(var x=0,len=docs.length;x<len;x++){
 			docs[x].date = moment(docs[x]._id.getTimestamp()).format("MM/DD/YYYY");
+      docs[x].selected = (game._id !== undefined && game._id.toString() == docs[x]._id.toString()) ? true : false;
 		}
-		console.log(docs);
   	io.emit('available_games', docs); 
   });
 }
+
+function addGameInstance(io, obj){
+  var available_games = db.get('game-scoring--games');
+
+  available_games.insert({name: obj.game.name, users: [obj.user]}).then(function (data) {
+    emitAvailableGames(io, data);
+    io.emit('joined_game', data); 
+  });
+}
+
+function joinGameInstance(io, obj){
+  var available_games = db.get('game-scoring--games');
+
+  available_games.find({ "_id" : monk.id(obj.game._id) }).then(function(game) {
+
+    if(!game.users.includes(obj.user)){
+      available_games.findOneAndUpdate( 
+        { "_id" : monk.id(obj.game._id) },
+        { $push: { users: obj.user } }
+      ).then(function(docs) {
+        console.log('Joining game');
+        docs.date = moment(docs._id.getTimestamp()).format("MM/DD/YYYY");
+        docs.selected = (obj.game._id !== undefined && obj.game._id.toString() == docs._id.toString()) ? true : false;
+        io.emit('joined_game', docs); 
+      });
+    }
+  });
+}
+
+  function calcDividend(company){
+    var si = parseInt(company.stocks_issued);
+    var ri = parseInt(company.rr_income);
+
+    return Math.ceil( parseFloat(ri/si) );
+  }
+
+  function calcStockPrice(company){
+    var sv = parseInt(company.stock_value);
+    var dv = parseInt(company.dividend);
+
+    return sv+dv;
+  }
+
+  function calcDividendPayment(company, stock_owned){
+    var dv = parseInt(company.dividend);
+    var so = parseInt(stock_owned);
+
+    return so * dv ;
+  }
+
 
 
 http.listen(3000, function(){
