@@ -16,6 +16,9 @@ app.get('/', function(req, res){
   res.sendFile(__dirname + '/continental_divide.html');
 });
 
+var nsp_socket = [];
+
+const companies = ['blue','red', 'yellow', 'pink', 'green', 'brown', 'purple', 'black'];
 
 io.on('connection', function(socket){
   console.log('client connected');
@@ -36,18 +39,30 @@ io.on('connection', function(socket){
     console.log('client disconnected');
   });
 
-  socket.on('save username', function(msg){
-    console.log(msg);
+  socket.on('save username', function(username){
+    console.log(username);
 
-    io.emit('save username', msg);
-  });
-  socket.on('update_company', function(msg){
-    console.log(msg);
+    createNamespace(username);
 
-    io.emit('update_company', msg);
+    io.emit('save username', username);
   });
+  socket.on('update_company', function(obj){
+    updateCompanyInfo(obj);
+  });
+
+  socket.on('get_company', function(obj){
+    getCompanyInfo(obj);
+  });
+
 });
 
+function createNamespace(username){
+  nsp_socket[username] = io.of('/'+username);
+  nsp_socket[username].on('connection', function(socket){
+    console.log(username+' connected to nsp channel: '+username);
+
+  });
+}
 
 function emitAvailableGames(io, game){
 	var available_games = db.get('game-scoring--games');
@@ -62,8 +77,28 @@ function emitAvailableGames(io, game){
 
 function addGameInstance(io, obj){
   var available_games = db.get('game-scoring--games');
+  var comp;
+  var game_obj = {
+    name: obj.game.name, 
+    users: [obj.user],
+    companies: {}
+  };
 
-  available_games.insert({name: obj.game.name, users: [obj.user]}).then(function (data) {
+  for(var x=0,len=companies.length;x<len;x++){
+    comp = companies[x];
+    game_obj.companies[ comp ] = {
+      tag: comp,
+      name: comp+' Railroad',
+      stocks_issued: 0,
+      rr_income: 0,
+      stock_value: 0,
+      stock_price: 0,
+      dividend: 0,
+      remaining_stock: 0
+    }
+  }
+
+  available_games.insert( game_obj).then(function (data) {
     emitAvailableGames(io, data);
     io.emit('joined_game', data); 
   });
@@ -72,9 +107,11 @@ function addGameInstance(io, obj){
 function joinGameInstance(io, obj){
   var available_games = db.get('game-scoring--games');
 
-  available_games.find({ "_id" : monk.id(obj.game._id) }).then(function(game) {
+  console.log('Attempting to join game');
 
-    if(!game.users.includes(obj.user)){
+  available_games.find({ "_id" : monk.id(obj.game._id) }).then(function(game) {
+    console.log('game found');
+    if(inArray(obj.user, game[0].users) === false){
       available_games.findOneAndUpdate( 
         { "_id" : monk.id(obj.game._id) },
         { $push: { users: obj.user } }
@@ -84,7 +121,33 @@ function joinGameInstance(io, obj){
         docs.selected = (obj.game._id !== undefined && obj.game._id.toString() == docs._id.toString()) ? true : false;
         io.emit('joined_game', docs); 
       });
+    } else {
+      console.log('Joining game already a part of');
+      game[0].date = moment(game[0]._id.getTimestamp()).format("MM/DD/YYYY");
+      game[0].selected = (obj.game._id !== undefined && obj.game._id.toString() == game[0]._id.toString()) ? true : false;
+      io.emit('joined_game', game[0]); 
     }
+  });
+}
+
+function getCompanyInfo(obj){
+  var available_games = db.get('game-scoring--games');
+  console.log('Getting company');
+
+  available_games.find({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
+    console.log(game[0].companies[obj.company_name]);
+    io.emit('get_company', game[0].companies[obj.company_name]); 
+  });
+}
+
+function updateCompanyInfo(obj){
+  var available_games = db.get('game-scoring--games');
+  console.log('updating company');
+
+  available_games.find({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
+    var curr_game = game[0];
+
+    io.emit('update_company', curr_game);
   });
 }
 
@@ -109,7 +172,17 @@ function joinGameInstance(io, obj){
     return so * dv ;
   }
 
+function buildCompany(company){
 
+}
+
+function inArray(needle, haystack) {
+    var length = haystack.length;
+    for(var i = 0; i < length; i++) {
+        if(haystack[i] == needle) return true;
+    }
+    return false;
+}
 
 http.listen(3000, function(){
   console.log('listening on *:3000');
