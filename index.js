@@ -77,26 +77,7 @@ function emitAvailableGames(io, game){
 
 function addGameInstance(io, obj){
   var available_games = db.get('game-scoring--games');
-  var comp;
-  var game_obj = {
-    name: obj.game.name, 
-    users: [obj.user],
-    companies: {}
-  };
-
-  for(var x=0,len=companies.length;x<len;x++){
-    comp = companies[x];
-    game_obj.companies[ comp ] = {
-      tag: comp,
-      name: comp+' Railroad',
-      stocks_issued: 0,
-      rr_income: 0,
-      stock_value: 0,
-      stock_price: 0,
-      dividend: 0,
-      remaining_stock: 0
-    }
-  }
+  var game_obj = buildCompany(obj);
 
   available_games.insert( game_obj).then(function (data) {
     emitAvailableGames(io, data);
@@ -135,45 +116,83 @@ function getCompanyInfo(obj){
   console.log('Getting company');
 
   available_games.find({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
-    console.log(game[0].companies[obj.company_name]);
     io.emit('get_company', game[0].companies[obj.company_name]); 
   });
 }
 
 function updateCompanyInfo(obj){
-  var available_games = db.get('game-scoring--games');
+  var avail_game = db.get('game-scoring--games');
   console.log('updating company');
 
-  available_games.find({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
-    var curr_game = game[0];
+  avail_game.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(db_game) {
+    console.log('Found game company to update');
+    var curr_compy = calcCompanyValues(obj.company, db_game.companies[ obj.company.tag ]);
 
-    io.emit('update_company', curr_game);
+    db_game.companies[ obj.company.tag ] = curr_compy;
+console.log(db_game.companies);
+
+    avail_game.updateOne(
+      { "_id" : monk.id(obj.game_oid) }, 
+      { $set: { companies: db_game.companies } })
+    .then(function(game){
+      console.log('Company updated');
+      io.emit('update_company', curr_compy);
+    });
   });
 }
 
-  function calcDividend(company){
-    var si = parseInt(company.stocks_issued);
-    var ri = parseInt(company.rr_income);
+  function calcDividend(stocks_issued, rr_income){
+    var si = parseInt(stocks_issued);
+    var ri = parseInt(rr_income);
 
-    return Math.ceil( parseFloat(ri/si) );
+    return isNaN( parseFloat(ri/si) ) ? 0 : Math.ceil( parseFloat(ri/si) );
   }
 
-  function calcStockPrice(company){
-    var sv = parseInt(company.stock_value);
-    var dv = parseInt(company.dividend);
+  function calcStockPrice(stock_value, dividend){
+    var sv = parseInt(stock_value);
+    var dv = parseInt(dividend);
 
     return sv+dv;
   }
 
-  function calcDividendPayment(company, stock_owned){
-    var dv = parseInt(company.dividend);
+  function calcDividendPayment(dividend, stock_owned){
+    var dv = parseInt(dividend);
     var so = parseInt(stock_owned);
 
     return so * dv ;
   }
 
-function buildCompany(company){
+function buildCompany(obj){
+  var comp;
+  var game_obj = {
+    name: obj.game.name, 
+    users: [obj.user],
+    companies: {}
+  };
 
+  for(var x=0,len=companies.length;x<len;x++){
+    comp = companies[x];
+    game_obj.companies[ comp ] = {
+      tag: comp,
+      name: comp+' Railroad',
+      stocks_issued: 0,
+      rr_income: 0,
+      stock_value: 0,
+      stock_price: 0,
+      dividend: 0,
+      remaining_stock: 0
+    }
+  }
+
+  return game_obj;
+}
+
+function calcCompanyValues(obj, db_game){
+  obj.dividend    = calcDividend(obj.stocks_issued, obj.rr_income);
+  obj.stock_price = calcStockPrice(obj.stock_value, obj.dividend);
+console.log('calcCompanyValues');
+console.log(obj);
+  return obj;
 }
 
 function inArray(needle, haystack) {

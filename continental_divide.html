@@ -289,7 +289,7 @@ $( document ).ready(function() {
       $(this).toggleClass('hidden');
       // $('.step1').toggleClass('hidden');
       // $('.step2').toggleClass('hidden');
-      update();
+      update('init');
     } else {
       alert_msg('company_pane', 'Stocks Issued must be 3-10 & Stock Value must be 10-50.');
     }
@@ -320,14 +320,15 @@ $( document ).ready(function() {
     }
   });
 
-  function update(){
+  function update(action){
     socket.emit('update_company', {
       game_oid: game_oid,
       company: {
         tag: $(".company .btn.active").text().toLowerCase(),
         stocks_issued: parseInt($(".stocks_issued input").val()),
         rr_income: parseInt($(".rr_income input").val()),
-        stock_value: parseInt($(".stock_value input").val())
+        stock_value: parseInt($(".stock_value input").val()),
+        remaining_stock: (action == 'init') ? parseInt($(".stocks_issued input").val()) : 0
       }
     });
   }
