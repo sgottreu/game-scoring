@@ -201,14 +201,25 @@ input[type="number"] { width: 40px; }
       </div>
       <div class="modal-body">
         Username: <input type="text" id="username">
+        <br><br>
         <div class="dropdown">
-          <a href="#" class="btn btn-primary dropdown-toggle" id="available_games_dd" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Dropdown <span class="caret"></span> </a>
-          <div class="panel panel-default">
+          <a href="#" class="btn btn-primary dropdown-toggle" id="available_games_dd" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Game Instance <span class="caret"></span> </a>
+<!--           <div class="panel panel-default">
             <div class="panel-body">
               
             </div>
-          </div>
-          <ul class="dropdown-menu" aria-labelledby="available_games_dd">            
+          </div> -->
+          <ul class="dropdown-menu available_games_dd" aria-labelledby="available_games_dd">            
+          </ul>
+        </div>
+        <br><br>
+        <div class="dropdown hidden">
+          <a href="#" class="btn btn-primary dropdown-toggle" id="num_players" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Number of Players <span class="caret"></span> </a>
+          <ul class="dropdown-menu num_players" aria-labelledby="num_players">     
+            <li role="presentation" class="dropdown"><a href="#" id=num_players3" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numPlayers="3">3</a></li> 
+            <li role="presentation" class="dropdown"><a href="#" id=num_players4" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numPlayers="4">4</a></li> 
+            <li role="presentation" class="dropdown"><a href="#" id=num_players5" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numPlayers="5">5</a></li> 
+            <li role="presentation" class="dropdown"><a href="#" id=num_players6" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" id=num_players6" data-numPlayers="6">6</a></li>     
           </ul>
         </div>
       </div>
@@ -257,24 +268,19 @@ $( document ).ready(function() {
   });
 
   $("#modal--username button").click(function(event){
-    var _id = $('.dropdown.open .dropdown-toggle').data('oid');
-      if($("#username").val() == '' || _id === undefined){
-        alert_msg('modal-body', 'Please enter your username & game preference.');
+    var _id = $('.available_games_dd .dropdown.selected a').data('oid');
+    var numPlayers = $('.num_players .dropdown.selected a').data('numPlayers');
+
+      if($("#username").val() == '' || _id === undefined || (_id == 'new' && numPlayers === undefined)){
+        alert_msg('modal-body', 'Please enter your username, game preference && number of players.');
       } else {
         localStorage.setItem("game-scoring--username", $("#username").val() );
         var action = (_id == 'new') ? 'add_game_instance' : 'join_game_instance';
 
         socket.emit('save username', $("#username").val());
-
         nsp_socket = io('/'+$("#username").val() );
-
-        // nsp_socket.emit('now_connected', 'success');
-
         socket.emit(action, 
-          { 
-            game: {
-              name: game_name, _id: $('.dropdown.open .dropdown-toggle').data('oid') 
-            },
+          { game: { name: game_name, _id: $('.dropdown.open .dropdown-toggle').data('oid') },
             user: $("#username").val()
           }
         );
@@ -320,6 +326,49 @@ $( document ).ready(function() {
     }
   });
 
+  $('.available_games_dd').on('click', function(e) {
+    $('.available_games_dd .dropdown').removeClass('selected');
+    $('#'+e.originalEvent.target.id).parent().addClass('selected');
+
+    if(e.originalEvent.target.id == "new_instance"){
+      $("#num_players").parent().removeClass('hidden');
+    } else {
+      $("#num_players").parent().addClass('hidden');
+    }
+  });
+
+  $('.num_players').on('click', function(e) {
+    $('.num_players .dropdown').removeClass('selected');
+    $('#'+e.originalEvent.target.id).parent().addClass('selected');
+  });
+
+});
+
+  function alert_msg(klass, msg){
+    $('.'+klass).prepend('<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>'+msg+'</div>');
+  }
+
+  function log_actions(msg){
+    $('.log').append($('<li>').text(msg));
+  }
+
+  function populateCompany(company){
+    $(".company_name").text(company.name);
+    $(".stocks_issued input").val(company.stocks_issued);
+    $(".rr_income input").val(company.rr_income);
+    $(".stock_value input").val(company.stock_value);
+
+    $("#stock_price__txt").text(company.stock_price);
+    $("#dividend__txt").text(company.dividend);
+    $("#dividend_payment__txt").text(company.remaining_stock * company.stock_price);
+    $("#remaining_stock__txt").text(company.remaining_stock);
+
+
+    if(company.stocks_issued == 0 && company.stock_value == 0){
+      $(".setCompanyStock").removeClass("hidden");
+    }
+  }
+
   function update(action){
     socket.emit('update_company', {
       game_oid: game_oid,
@@ -333,53 +382,30 @@ $( document ).ready(function() {
     });
   }
 
-});
-
-function alert_msg(klass, msg){
-  $('.'+klass).prepend('<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>'+msg+'</div>');
-}
-
-function log_actions(msg){
-  $('.log').append($('<li>').text(msg));
-}
-
-function populateCompany(company){
-  $(".company_name").text(company.name);
-  $(".stocks_issued input").val(company.stocks_issued);
-  $(".rr_income input").val(company.rr_income);
-  $(".stock_value input").val(company.stock_value);
-
-  $("#stock_price__txt").text(company.stock_price);
-  $("#dividend__txt").text(company.dividend);
-  $("#dividend_payment__txt").text(company.remaining_stock * company.stock_price);
-  $("#remaining_stock__txt").text(company.remaining_stock);
-
-
-  if(company.stocks_issued == 0 && company.stock_value == 0){
-    $(".setCompanyStock").removeClass("hidden");
-  }
-}
-
 /******** Socket IO commands *****/
 
-socket.on('available_games', function(games){    
-  var html = '<li role="presentation" class="dropdown"><a href="#" class="dropdown-toggle" id="new_instance" data-toggle="dropdown" data-oid="new" role="button" aria-haspopup="true" aria-expanded="false">+ Add New Instance</a></li>';
-  for(var x=0,len=games.length;x<len;x++){
-    html += '<li role="presentation" class="dropdown"><a href="#" class="dropdown-toggle" id="'+games[x].name+'_'+games[x].date+'" data-oid="'+games[x]._id+'" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">'+games[x].name+' - '+games[x].date+'</a></li>';
-  }
-  $('.dropdown-menu[aria-labelledby="available_games_dd"]').html(html);
-});
+  socket.on('available_games', function(games){    
+    var html = '<li role="presentation" class="dropdown"><a href="#" class="dropdown-toggle" id="new_instance" data-toggle="dropdown" data-oid="new" role="button" aria-haspopup="true" aria-expanded="false">+ Add New Instance</a></li>';
+    for(var x=0,len=games.length;x<len;x++){
+      html += '<li role="presentation" class="dropdown"><a href="#" class="dropdown-toggle" id="'+games[x]._id+'" data-oid="'+games[x]._id+'" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">'+games[x].name+' - '+games[x].date+'</a></li>';
+    }
+    $('.dropdown-menu[aria-labelledby="available_games_dd"]').html(html);
+  });
 
-socket.on('joined_game', function(msg){
-  game_oid = msg._id;
-  log_actions(msg.users.pop()+' has joined the game');
-});
+  socket.on('joined_game', function(msg){
+    console.log(msg);
+    game_oid = msg._id;
+    log_actions(msg.newest_user+' has joined the game');
+  });
 
-socket.on('get_company', function(company){
-  log_actions('information about '+company.name+' requested');
-  $(".company_pane__fields").removeClass("hidden");
-  populateCompany(company);
-});
+  socket.on('get_company', function(company){
+    log_actions('information about '+company.name+' requested');
+    
+    if($('.company .btn.active') && company.tag == $('.company .btn.active').text().toLowerCase() ){
+      $(".company_pane__fields").removeClass("hidden");
+      populateCompany(company);
+    } 
+  });
 
 </script>
 </body>

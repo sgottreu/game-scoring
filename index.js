@@ -20,6 +20,13 @@ var nsp_socket = [];
 
 const companies = ['blue','red', 'yellow', 'pink', 'green', 'brown', 'purple', 'black'];
 
+const player_amts = {
+    3: 80,
+    4: 60,
+    5: 48,
+    6: 40 
+  };
+
 io.on('connection', function(socket){
   console.log('client connected');
 
@@ -40,10 +47,7 @@ io.on('connection', function(socket){
   });
 
   socket.on('save username', function(username){
-    console.log(username);
-
     createNamespace(username);
-
     io.emit('save username', username);
   });
   socket.on('update_company', function(obj){
@@ -77,10 +81,11 @@ function emitAvailableGames(io, game){
 
 function addGameInstance(io, obj){
   var available_games = db.get('game-scoring--games');
-  var game_obj = buildCompany(obj);
+  var game_obj = buildGameInstance(obj);
 
   available_games.insert( game_obj).then(function (data) {
     emitAvailableGames(io, data);
+    data.newest_user = obj.user;
     io.emit('joined_game', data); 
   });
 }
@@ -92,20 +97,31 @@ function joinGameInstance(io, obj){
 
   available_games.find({ "_id" : monk.id(obj.game._id) }).then(function(game) {
     console.log('game found');
-    if(inArray(obj.user, game[0].users) === false){
+    if(game[0].users[ obj.user ] === undefined){
+
+      var users = game[0].users;
+
+      users[obj.user] = buildUserObj(obj.user);
+      for(var x=0,len=companies.length;x<len;x++){
+        users[obj.user].companies[ companies[x] ] = buildUserCompanyObj(companies[x]);
+      }
+
       available_games.findOneAndUpdate( 
         { "_id" : monk.id(obj.game._id) },
-        { $push: { users: obj.user } }
+        { $set: { users: users } }
       ).then(function(docs) {
         console.log('Joining game');
         docs.date = moment(docs._id.getTimestamp()).format("MM/DD/YYYY");
         docs.selected = (obj.game._id !== undefined && obj.game._id.toString() == docs._id.toString()) ? true : false;
+
+        docs.newest_user = obj.user;
         io.emit('joined_game', docs); 
       });
     } else {
       console.log('Joining game already a part of');
       game[0].date = moment(game[0]._id.getTimestamp()).format("MM/DD/YYYY");
       game[0].selected = (obj.game._id !== undefined && obj.game._id.toString() == game[0]._id.toString()) ? true : false;
+      game[0].newest_user = obj.user;
       io.emit('joined_game', game[0]); 
     }
   });
@@ -129,11 +145,10 @@ function updateCompanyInfo(obj){
     var curr_compy = calcCompanyValues(obj.company, db_game.companies[ obj.company.tag ]);
 
     db_game.companies[ obj.company.tag ] = curr_compy;
-console.log(db_game.companies);
 
-    avail_game.updateOne(
+    avail_game.update(
       { "_id" : monk.id(obj.game_oid) }, 
-      { $set: { companies: db_game.companies } })
+      db_game )
     .then(function(game){
       console.log('Company updated');
       io.emit('update_company', curr_compy);
@@ -162,37 +177,68 @@ console.log(db_game.companies);
     return so * dv ;
   }
 
-function buildCompany(obj){
-  var comp;
+function buildGameInstance(obj){
+  var comp, user = {};
+
+  user[obj.user] = buildUserObj(obj.user);
+
   var game_obj = {
     name: obj.game.name, 
-    users: [obj.user],
+    users: user,
     companies: {}
   };
 
   for(var x=0,len=companies.length;x<len;x++){
     comp = companies[x];
-    game_obj.companies[ comp ] = {
-      tag: comp,
-      name: comp+' Railroad',
-      stocks_issued: 0,
-      rr_income: 0,
-      stock_value: 0,
-      stock_price: 0,
-      dividend: 0,
-      remaining_stock: 0
-    }
+    game_obj.companies[ comp ] = buildCompanyObj(comp);
+    game_obj.users[obj.user].companies[ comp ] = buildUserCompanyObj(comp);
   }
 
   return game_obj;
 }
 
+
+function buildCompanyObj(comp){
+  return {
+    tag: comp,
+    name: comp+' Railroad',
+    stocks_issued: 0,
+    rr_income: 0,
+    stock_value: 0,
+    stock_price: 0,
+    dividend: 0,
+    remaining_stock: 0
+  };
+}
+
+function buildUserObj(user){
+  return {
+    name: user,
+    companies: {},
+    cash_total: 0,
+    dividend_payment: 0
+  };
+}
+
+function buildUserCompanyObj(comp){
+  return {
+    tag: comp,
+    name: comp+' Railroad',
+    stocks_owned: 0,
+    dividend: 0
+  };
+}
+
 function calcCompanyValues(obj, db_game){
-  obj.dividend    = calcDividend(obj.stocks_issued, obj.rr_income);
-  obj.stock_price = calcStockPrice(obj.stock_value, obj.dividend);
-console.log('calcCompanyValues');
-console.log(obj);
-  return obj;
+  if(db_game.stocks_issued == 0){
+    db_game.stocks_issued = obj.stocks_issued;
+    db_game.stock_value   = obj.stock_value;
+  }
+  db_game.rr_income   = obj.rr_income;
+  db_game.dividend    = calcDividend(db_game.stocks_issued, db_game.rr_income);
+  db_game.stock_price = calcStockPrice(db_game.stock_value, db_game.dividend);
+
+  return db_game;
 }
 
 function inArray(needle, haystack) {
