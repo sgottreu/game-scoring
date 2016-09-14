@@ -10,22 +10,22 @@ var moment = require('moment');
 var mongodb_config = (process.env.mongodb) ? process.env.mongodb : process.argv[2];
 var mongo_url = 'mongodb://'+mongodb_config;
 
-const db = monk(mongo_url);
-
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/continental_divide.html');
-});
+var db = monk(mongo_url);
 
 var nsp_socket = [];
 
-const companies = ['blue','red', 'yellow', 'pink', 'green', 'brown', 'purple', 'black'];
+var companies = ['blue','red', 'yellow', 'pink', 'green', 'brown', 'purple', 'black'];
 
-const player_amts = {
+var player_amts = {
     3: 80,
     4: 60,
     5: 48,
     6: 40 
   };
+
+app.get('/', function(req, res){
+  res.sendFile(__dirname + '/continental_divide.html');
+});
 
 io.on('connection', function(socket){
   console.log('client connected');
@@ -51,7 +51,7 @@ io.on('connection', function(socket){
     io.emit('save username', username);
   });
   socket.on('update_company', function(obj){
-    updateCompanyInfo(obj);
+    purchaseTransaction(obj);
   });
 
   socket.on('get_company', function(obj){
@@ -72,8 +72,7 @@ function emitAvailableGames(io, game){
 	var available_games = db.get('game-scoring--games');
   available_games.find({ name: game.name }).then(function(docs) {
     for(var x=0,len=docs.length;x<len;x++){
-			docs[x].date = moment(docs[x]._id.getTimestamp()).format("MM/DD/YYYY");
-      docs[x].selected = (game._id !== undefined && game._id.toString() == docs[x]._id.toString()) ? true : false;
+			docs[x] = setGameAttrib(docs[x], game._id);
 		}
   	io.emit('available_games', docs); 
   });
@@ -101,7 +100,7 @@ function joinGameInstance(io, obj){
 
       var users = game[0].users;
 
-      users[obj.user] = buildUserObj(obj.user);
+      users[obj.user] = buildUserObj(obj.user, game[0].num_players);
       for(var x=0,len=companies.length;x<len;x++){
         users[obj.user].companies[ companies[x] ] = buildUserCompanyObj(companies[x]);
       }
@@ -111,20 +110,24 @@ function joinGameInstance(io, obj){
         { $set: { users: users } }
       ).then(function(docs) {
         console.log('Joining game');
-        docs.date = moment(docs._id.getTimestamp()).format("MM/DD/YYYY");
-        docs.selected = (obj.game._id !== undefined && obj.game._id.toString() == docs._id.toString()) ? true : false;
-
-        docs.newest_user = obj.user;
+        docs = setGameAttrib(docs, obj.game._id, obj.user);
         io.emit('joined_game', docs); 
       });
     } else {
       console.log('Joining game already a part of');
-      game[0].date = moment(game[0]._id.getTimestamp()).format("MM/DD/YYYY");
-      game[0].selected = (obj.game._id !== undefined && obj.game._id.toString() == game[0]._id.toString()) ? true : false;
-      game[0].newest_user = obj.user;
+      game[0] = setGameAttrib(game[0], obj.game._id, obj.user);
       io.emit('joined_game', game[0]); 
     }
   });
+}
+
+function setGameAttrib(game, _id, user){
+  game.date = moment(game._id.getTimestamp()).format("MM/DD/YYYY");
+  game.selected = (_id !== undefined && _id.toString() == game._id.toString()) ? true : false;
+  if(user !== undefined){
+    game.newest_user = user;
+  }
+  return game;
 }
 
 function getCompanyInfo(obj){
@@ -136,22 +139,22 @@ function getCompanyInfo(obj){
   });
 }
 
-function updateCompanyInfo(obj){
+function purchaseTransaction(obj){
   var avail_game = db.get('game-scoring--games');
   console.log('updating company');
 
   avail_game.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(db_game) {
     console.log('Found game company to update');
-    var curr_compy = calcCompanyValues(obj.company, db_game.companies[ obj.company.tag ]);
+    db_game.companies[ obj.company.tag ] = calcCompanyValues(obj, db_game);
 
-    db_game.companies[ obj.company.tag ] = curr_compy;
+    db_game.users[obj.user] = userTransaction(obj, db_game);
 
     avail_game.update(
       { "_id" : monk.id(obj.game_oid) }, 
       db_game )
     .then(function(game){
       console.log('Company updated');
-      io.emit('update_company', curr_compy);
+      io.emit('update_company', db_game.companies[ obj.company.tag ]);
     });
   });
 }
@@ -180,11 +183,12 @@ function updateCompanyInfo(obj){
 function buildGameInstance(obj){
   var comp, user = {};
 
-  user[obj.user] = buildUserObj(obj.user);
+  user[obj.user] = buildUserObj(obj.user, obj.game.num_players);
 
   var game_obj = {
     name: obj.game.name, 
     users: user,
+    num_players: obj.game.num_players,
     companies: {}
   };
 
@@ -202,6 +206,7 @@ function buildCompanyObj(comp){
   return {
     tag: comp,
     name: comp+' Railroad',
+    rr_treasury: 0,
     stocks_issued: 0,
     rr_income: 0,
     stock_value: 0,
@@ -211,11 +216,11 @@ function buildCompanyObj(comp){
   };
 }
 
-function buildUserObj(user){
+function buildUserObj(user, num_players){
   return {
     name: user,
     companies: {},
-    cash_total: 0,
+    cash_total: player_amts[num_players],
     dividend_payment: 0
   };
 }
@@ -230,15 +235,38 @@ function buildUserCompanyObj(comp){
 }
 
 function calcCompanyValues(obj, db_game){
-  if(db_game.stocks_issued == 0){
-    db_game.stocks_issued = obj.stocks_issued;
-    db_game.stock_value   = obj.stock_value;
-  }
-  db_game.rr_income   = obj.rr_income;
-  db_game.dividend    = calcDividend(db_game.stocks_issued, db_game.rr_income);
-  db_game.stock_price = calcStockPrice(db_game.stock_value, db_game.dividend);
+  var tag = db_game.companies[ obj.company.tag ];
+  tag.remaining_stock = tag.remaining_stock - obj.num_purchased_stocks;
+  tag.rr_income = obj.company.rr_income;
+  tag.rr_treasury = tag.rr_treasury + obj.purchase_price;
 
-  return db_game;
+  if(obj.action == 'init_company'){
+
+    tag.stocks_issued = obj.company.stocks_issued;
+    tag.stock_value   = obj.company.stock_value;
+    tag.remaining_stock = tag.stocks_issued - 1;
+    tag.rr_income = 0;
+    tag.rr_treasury = obj.purchase_price;
+  }
+
+  tag.dividend    = calcDividend(tag.stocks_issued, tag.rr_income);
+  tag.stock_price = calcStockPrice(tag.stock_value, tag.dividend);
+  return tag;
+}
+
+function userTransaction(obj, db_game){
+  var curr_user = db_game.users[ obj.user ];
+  var curr_user_company = db_game.users[ obj.user ].companies[ obj.company.tag ];
+  var curr_company = db_game.companies[ obj.company.tag ];
+
+  curr_user_company.stocks_owned = curr_user_company.stocks_owned + obj.num_purchased_stocks;
+  curr_user_company.dividend = calcDividend(curr_company.stocks_issued, curr_company.rr_income);
+
+  curr_user.cash_total = curr_user.cash_total - obj.purchase_price;
+  curr_user.companies[ obj.company.tag ] = curr_user_company;
+
+  return curr_user;
+  
 }
 
 function inArray(needle, haystack) {

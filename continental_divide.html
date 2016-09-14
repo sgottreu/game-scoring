@@ -96,8 +96,8 @@ input[type="number"] { width: 40px; }
       <button class="btn black ">Black</button>
     </div>
 
-    <button type="button" class="btn btn-primary setCompanyStock hidden" autocomplete="off"> 
-      Start Company 
+    <button type="button" class="btn btn-primary purchaseCompanyStock hidden" autocomplete="off"> 
+      Purchase Stock 
     </button> 
   </div>
 </div>
@@ -114,7 +114,7 @@ input[type="number"] { width: 40px; }
       <span>Stock Value</span> 
       <span>
         <div class="input-group spinner"> 
-          <input type="text" class="form-control" value="0" > 
+          <input type="text" class="form-control" value="0" data-initval=""> 
           <div class="input-group-btn-vertical"> 
             <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></a> 
             <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></a> 
@@ -216,10 +216,10 @@ input[type="number"] { width: 40px; }
         <div class="dropdown hidden">
           <a href="#" class="btn btn-primary dropdown-toggle" id="num_players" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Number of Players <span class="caret"></span> </a>
           <ul class="dropdown-menu num_players" aria-labelledby="num_players">     
-            <li role="presentation" class="dropdown"><a href="#" id=num_players3" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numPlayers="3">3</a></li> 
-            <li role="presentation" class="dropdown"><a href="#" id=num_players4" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numPlayers="4">4</a></li> 
-            <li role="presentation" class="dropdown"><a href="#" id=num_players5" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numPlayers="5">5</a></li> 
-            <li role="presentation" class="dropdown"><a href="#" id=num_players6" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" id=num_players6" data-numPlayers="6">6</a></li>     
+            <li role="presentation" class="dropdown"><a href="#" id="num_players3" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numplayers="3">3</a></li> 
+            <li role="presentation" class="dropdown"><a href="#" id="num_players4" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numplayers="4">4</a></li> 
+            <li role="presentation" class="dropdown"><a href="#" id="num_players5" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numplayers="5">5</a></li> 
+            <li role="presentation" class="dropdown"><a href="#" id="num_players6" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" id=num_players6" data-numplayers="6">6</a></li>     
           </ul>
         </div>
       </div>
@@ -229,6 +229,55 @@ input[type="number"] { width: 40px; }
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
+
+<div class="modal fade" tabindex="-1" role="dialog" id="modal--buyStock">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Enter Number of Stocks and Price Paid</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row ">
+          <div class="col-xs-6 col-md-4">
+            <div class="num_purchased_stocks"> 
+              <span># Stocks to Purchase</span> 
+              <span>
+                <div class="input-group spinner"> 
+                  <input type="text" class="form-control" value="1" > 
+                  <div class="input-group-btn-vertical"> 
+                    <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></a> 
+                    <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></a> 
+                  </div> 
+                </div>
+              </span> 
+            </div> 
+          </div>
+        </div>
+        <div class="row ">
+          <div class="col-xs-6 col-md-4">
+            <div class="purchase_price "> 
+              <span>Amount to Pay</span> 
+              <span>
+                <div class="input-group spinner"> 
+                  <input type="text" class="form-control" value="0" > 
+                  <div class="input-group-btn-vertical"> 
+                    <button class="btn btn-default" type="button"><i class="fa fa-caret-up"></i></a> 
+                    <button class="btn btn-default" type="button"><i class="fa fa-caret-down"></i></a> 
+                  </div> 
+                </div>
+              </span> 
+            </div> 
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Purchase</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
 
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" crossorigin="anonymous"></script>
@@ -254,6 +303,10 @@ $( document ).ready(function() {
     show:true
   });
 
+  $('#modal--buyStock').modal({
+    show:false
+  });
+
   if(user !== undefined && user !== null && user != ''){
     $("#username").val(user);
   } else {
@@ -264,14 +317,16 @@ $( document ).ready(function() {
     $(".company .btn").removeClass('active');
     $(this).toggleClass('active');
 
+    $(".purchaseCompanyStock").removeClass('hidden');
+
     socket.emit('get_company', { game_oid: game_oid, company_name: $(".company .btn.active").text().toLowerCase() });
   });
 
   $("#modal--username button").click(function(event){
     var _id = $('.available_games_dd .dropdown.selected a').data('oid');
-    var numPlayers = $('.num_players .dropdown.selected a').data('numPlayers');
+    var numplayers = $('.num_players .dropdown.selected a').data('numplayers');
 
-      if($("#username").val() == '' || _id === undefined || (_id == 'new' && numPlayers === undefined)){
+      if($("#username").val() == '' || _id === undefined || (_id == 'new' && numplayers === undefined)){
         alert_msg('modal-body', 'Please enter your username, game preference && number of players.');
       } else {
         localStorage.setItem("game-scoring--username", $("#username").val() );
@@ -280,7 +335,11 @@ $( document ).ready(function() {
         socket.emit('save username', $("#username").val());
         nsp_socket = io('/'+$("#username").val() );
         socket.emit(action, 
-          { game: { name: game_name, _id: $('.dropdown.open .dropdown-toggle').data('oid') },
+          { game: { 
+              name: game_name, 
+              _id: $('.available_games_dd .dropdown.selected a').data('oid'),
+              num_players: $('.num_players .dropdown.selected a').data('numplayers')
+            },
             user: $("#username").val()
           }
         );
@@ -288,20 +347,29 @@ $( document ).ready(function() {
       }  
   });
 
-  $(".setCompanyStock").click(function(){
+  $(".purchaseCompanyStock").click(function(){
     var sv = parseInt($('.stock_value input').val(), 10);
     var si = parseInt($('.stocks_issued input').val(), 10);
+    var ri = parseInt($('.rr_income input').val(), 10);
+
     if( (sv >= 10 && sv <=50) && (si >=3 && si <= 10) ){
-      $(this).toggleClass('hidden');
-      // $('.step1').toggleClass('hidden');
-      // $('.step2').toggleClass('hidden');
-      update('init');
+      //$(this).toggleClass('hidden');
+      
+      var stock_price = sv + calcDividend(si, ri);
+      $(".purchase_price input").val(stock_price);
+      $('#modal--buyStock').modal('toggle');
+      //update('init');
     } else {
       alert_msg('company_pane', 'Stocks Issued must be 3-10 & Stock Value must be 10-50.');
     }
   });
 
-  $('.spinner .form-control').on('keyup', function(event) {
+  $("#modal--buyStock button").click(function(event){
+    var action = ($(".stock_value input").data('initval') == 0) ? 'init_company': '';
+    update(action);
+  });
+
+  $('.company_pane__fields .spinner .form-control').on('keyup', function(event) {
     var val = parseInt($(this).val(), 10);
     var spinner = $(this).parent().parent().find('input');
 
@@ -313,12 +381,12 @@ $( document ).ready(function() {
     }
   });
 
-  $('.spinner .btn:first-of-type').on('click', function() {
+  $('.company_pane__fields .spinner .btn:first-of-type').on('click', function() {
     var spinner = $(this).parent().parent().find('input');
     var val = parseInt($(spinner).val(), 10);
     $(spinner).val( val + 1);
   });
-  $('.spinner .btn:last-of-type').on('click', function() {
+  $('.company_pane__fields .spinner .btn:last-of-type').on('click', function() {
     var spinner = $(this).parent().parent().find('input');
     var val = parseInt($(spinner).val(), 10);
     if(val > 0){
@@ -328,24 +396,54 @@ $( document ).ready(function() {
 
   $('.available_games_dd').on('click', function(e) {
     $('.available_games_dd .dropdown').removeClass('selected');
-    $('#'+e.originalEvent.target.id).parent().addClass('selected');
+    
+    if(e.originalEvent.target.id !== ''){
+      $('#'+e.originalEvent.target.id).parent().addClass('selected');
 
-    if(e.originalEvent.target.id == "new_instance"){
-      $("#num_players").parent().removeClass('hidden');
-    } else {
-      $("#num_players").parent().addClass('hidden');
+      if(e.originalEvent.target.id == "new_instance"){
+        $("#num_players").parent().removeClass('hidden');
+      } else {
+        $("#num_players").parent().addClass('hidden');
+      }      
+    }
+
+  });
+
+  $('.num_purchased_stocks .spinner .btn:first-of-type').on('click', function() {
+    var spinner = $(this).parent().parent().find('input');
+    var val = parseInt($(spinner).val(), 10);
+    var si =  parseInt($(".stocks_issued input").val(), 10);
+    var initval = parseInt($(".stock_value input").data('initval'));
+
+    if(initval != 0 && val < si ){
+      $(spinner).val( val + 1);
     }
   });
 
+  $('.num_purchased_stocks .spinner .btn:last-of-type').on('click', function() {
+    var spinner = $(this).parent().parent().find('input');
+    var val = parseInt($(spinner).val(), 10);
+    if(val > 1){
+      $(spinner).val( val - 1);
+    }
+  });
+
+
   $('.num_players').on('click', function(e) {
     $('.num_players .dropdown').removeClass('selected');
-    $('#'+e.originalEvent.target.id).parent().addClass('selected');
+    if(e.originalEvent.target.id !== ''){
+      $('#'+e.originalEvent.target.id.toString() ).parent().addClass('selected');
+    }
   });
 
 });
 
   function alert_msg(klass, msg){
     $('.'+klass).prepend('<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>'+msg+'</div>');
+    $('.'+klass+' .alert').fadeTo(2000, 500).slideUp(500, function(){
+      $('.'+klass+' .alert').slideUp(500);
+      $('.'+klass+' .alert').remove();
+    });
   }
 
   function log_actions(msg){
@@ -357,6 +455,7 @@ $( document ).ready(function() {
     $(".stocks_issued input").val(company.stocks_issued);
     $(".rr_income input").val(company.rr_income);
     $(".stock_value input").val(company.stock_value);
+    $(".stock_value input").data('initval', company.stock_value);
 
     $("#stock_price__txt").text(company.stock_price);
     $("#dividend__txt").text(company.dividend);
@@ -365,21 +464,34 @@ $( document ).ready(function() {
 
 
     if(company.stocks_issued == 0 && company.stock_value == 0){
-      $(".setCompanyStock").removeClass("hidden");
+      $(".purchaseCompanyStock").removeClass("hidden");
     }
   }
 
   function update(action){
+    var company = { tag: $(".company .btn.active").text().toLowerCase() };
+
+    if(action == 'init_company'){
+      company.stocks_issued = parseInt($(".stocks_issued input").val());
+      company.stock_value = parseInt($(".stock_value input").val());
+      company.remaining_stock = parseInt($(".stocks_issued input").val());
+    }
+
     socket.emit('update_company', {
       game_oid: game_oid,
-      company: {
-        tag: $(".company .btn.active").text().toLowerCase(),
-        stocks_issued: parseInt($(".stocks_issued input").val()),
-        rr_income: parseInt($(".rr_income input").val()),
-        stock_value: parseInt($(".stock_value input").val()),
-        remaining_stock: (action == 'init') ? parseInt($(".stocks_issued input").val()) : 0
-      }
+      action: action,
+      company: company,
+      user: user,
+      num_purchased_stocks: parseInt($(".num_purchased_stocks input").val()),
+      purchase_price: parseInt($(".purchase_price input").val())
     });
+  }
+
+  function calcDividend(stocks_issued, rr_income){
+    var si = parseInt(stocks_issued);
+    var ri = parseInt(rr_income);
+
+    return isNaN( parseFloat(ri/si) ) ? 0 : Math.ceil( parseFloat(ri/si) );
   }
 
 /******** Socket IO commands *****/
