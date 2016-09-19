@@ -1,6 +1,7 @@
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var express = require('express');
 
 var mongo = require('mongodb');
 var monk = require('monk');
@@ -22,6 +23,8 @@ var player_amts = {
     5: 48,
     6: 40 
   };
+
+app.use(express.static('public'));
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/continental_divide.html');
@@ -134,7 +137,11 @@ function getStockValues(obj){
   var available_games = db.get('game-scoring--games');
   console.log('Getting Stock Values');
   available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
-    io.emit('get_stock_values', {companies: game.companies, purchase: obj.purchase }); 
+    io.emit('get_stock_values', {
+      companies: game.companies, 
+      purchase: obj.purchase,
+      user_treasury: game.users[obj.user].cash_total
+    }); 
   });
 }
 
