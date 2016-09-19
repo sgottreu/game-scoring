@@ -14,7 +14,8 @@
 
 <!-- Optional theme -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" crossorigin="anonymous">
+<!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" crossorigin="anonymous"> -->
+<link rel="stylesheet" href="font-awesome.min.css" crossorigin="anonymous">
 <style>
 body{     padding: 5px 20px; }
 
@@ -330,6 +331,7 @@ input[type="number"] { width: 40px; }
   var game_name = 'continental_divide';
   var game_oid;
   var user = localStorage.getItem("game-scoring--username"); 
+  var user_treasury = 0;
   var companies = ['blue','red', 'yellow', 'pink', 'green', 'brown', 'purple', 'black'];
 
   var current_company = false;
@@ -400,7 +402,8 @@ $( document ).ready(function() {
 
     socket.emit('get_stock_values', {
       game_oid: game_oid,
-      purchase: true
+      purchase: true,
+      user: user
     });
 
     if(current_company.open) {
@@ -414,21 +417,13 @@ $( document ).ready(function() {
   });
 
   $("#modal--buyStock .modal-footer button").click(function(event){
-    var action = (!current_company.open) ? 'init_company': '';
-    update(action);
+    if($('.purchase_price input').val() > user_treasury){
+      alert_msg('modal-body', 'You do not have enough money to purchase that amount of stock.');
+    } else {
+      var action = (!current_company.open) ? 'init_company': '';
+      update(action);
+    }
   });
-
-  // $('.company_pane__fields .spinner .form-control').on('keyup', function(event) {
-  //   var action = $(this).data('action');
-  //   var spinner = $(this).parent().parent().find('input');
-
-  //   if(event.keyCode == 38){
-  //    updateValue(spinner, action, 'inc');
-  //   }
-  //   if(event.keyCode == 40){
-  //     updateValue(spinner, action, 'dec');
-  //   }
-  // });
 
   $('.modal .spinner .btn:first-of-type').on('click', function() {
     var spinner = $(this).parent().parent().find('input');
@@ -456,26 +451,6 @@ $( document ).ready(function() {
     }
 
   });
-
-  // $('.num_purchased_stocks .spinner .btn:first-of-type').on('click', function() {
-  //   var spinner = $(this).parent().parent().find('input');
-  //   var val = parseInt($(spinner).val(), 10);
-  //   var si =  parseInt($(".stocks_issued input").val(), 10);
-  //   var initval = parseInt($(".stock_value input").data('initval'));
-
-  //   if(initval != 0 && val < si ){
-  //     $(spinner).val( val + 1);
-  //   }
-  // });
-
-  // $('.num_purchased_stocks .spinner .btn:last-of-type').on('click', function() {
-  //   var spinner = $(this).parent().parent().find('input');
-  //   var val = parseInt($(spinner).val(), 10);
-  //   if(val > 1){
-  //     $(spinner).val( val - 1);
-  //   }
-  // });
-
 
   $('.num_players').on('click', function(e) {
     $('.num_players .dropdown').removeClass('selected');
@@ -553,6 +528,10 @@ $( document ).ready(function() {
         break;
     }
 
+    if($('.purchase_price input').val() > user_treasury){
+      alert_msg('modal-body', 'You do not have enough money to purchase that amount of stock.');
+    }
+
   }    
 
 
@@ -570,12 +549,6 @@ $( document ).ready(function() {
     $("#remaining_stock__txt").text(company.remaining_stock);
 
     current_company = company;
-
-    // if(company.open === false){
-    //   $(".purchaseCompanyStock").removeClass("hidden");
-    // } else {
-    //   $(".purchaseCompanyStock").addClass("hidden");
-    // }
   }
 
   function update(action){
@@ -615,8 +588,8 @@ $( document ).ready(function() {
   });
 
   socket.on('joined_game', function(msg){
-console.log(msg);
     game_oid = msg._id;
+    user_treasury = msg.users[ msg.newest_user ].cash_total;
     log_actions(msg.newest_user+' has joined the game');
   });
 
@@ -639,6 +612,8 @@ console.log(msg);
 
   socket.on('get_stock_values', function(obj){
     var cv = obj.companies;
+
+    user_treasury = obj.user_treasury
 
     var company = $('.company .btn.active').text().toLowerCase();
 
