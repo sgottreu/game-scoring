@@ -65,6 +65,10 @@ io.on('connection', function(socket){
     getStockValues(obj);
   });
 
+  socket.on('modify_railroad_income', function(obj){
+    updateRailroadIncome(obj);
+  });
+
 });
 
 function createNamespace(username){
@@ -185,6 +189,26 @@ function purchaseTransaction(obj){
   });
 }
 
+function updateRailroadIncome(obj){
+  var avail_game = db.get('game-scoring--games');
+  console.log('updating income');
+
+  avail_game.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(db_game) {
+    console.log('Found game company to update');
+    db_game.companies[ obj.company.tag ] = calcCompanyValues(obj, db_game);
+
+    avail_game.update(
+      { "_id" : monk.id(obj.game_oid) }, 
+      db_game )
+    .then(function(game){
+      console.log('Company updated');
+      io.emit('update_company', db_game.companies[ obj.company.tag ]);
+
+      nsp_socket[obj.user].emit('close_income_window', true);
+    });
+  }); 
+}
+
   function calcDividend(stocks_issued, rr_income){
     var si = parseInt(stocks_issued);
     var ri = parseInt(rr_income);
@@ -263,10 +287,14 @@ function buildUserCompanyObj(comp){
 
 function calcCompanyValues(obj, db_game){
   var tag = db_game.companies[ obj.company.tag ];
-  tag.remaining_stock = tag.remaining_stock - obj.num_purchased_stocks;
-  tag.rr_income = obj.company.rr_income;
-  tag.rr_treasury = tag.rr_treasury + obj.purchase_price;
 
+  tag.rr_income = obj.company.rr_income;
+
+  if(obj.num_purchased_stocks !== undefined){
+    tag.remaining_stock = tag.remaining_stock - obj.num_purchased_stocks;  
+    tag.rr_treasury = tag.rr_treasury + obj.purchase_price;
+  }
+  
   if(obj.action == 'init_company'){
 
     tag.stocks_issued = obj.company.stocks_issued;
@@ -279,6 +307,7 @@ function calcCompanyValues(obj, db_game){
 
   tag.dividend    = calcDividend(tag.stocks_issued, tag.rr_income);
   tag.stock_price = calcStockPrice(tag.stock_value, tag.dividend);
+  
   return tag;
 }
 
