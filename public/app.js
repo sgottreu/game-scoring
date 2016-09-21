@@ -3,7 +3,7 @@
   var game_oid;
   var user = localStorage.getItem("game-scoring--username"); 
   var user_treasury = 0;
-  var companies = ['blue','red', 'yellow', 'pink', 'green', 'brown', 'purple', 'black'];
+  var companies = ['blue','red', 'yellow', 'pink', 'green', 'purple', 'brown', 'black'];
 
   var current_company = false;
 
@@ -21,6 +21,8 @@ $( document ).ready(function() {
   $('#modal--buyStock').modal({
     show:false
   });
+
+  addCompanyDividends();
 
   $('.modal-header button').on('click', function() {
     $(".modal-backdrop").remove();
@@ -78,6 +80,8 @@ $( document ).ready(function() {
       user: user
     });
 
+    confirmUserTreasury();
+
     if(current_company.open) {
       $("#modal--buyStock .stock_value").addClass('hidden');
       $("#modal--buyStock .stocks_issued").addClass('hidden');
@@ -99,7 +103,7 @@ $( document ).ready(function() {
 
   $(".increaseCompanyIncome").click(function(){
     $("#rr_income").val(current_company.rr_income);
-    $(".modal .modal-header h5").text( current_company.name );
+    $("#modal--income .modal-header h5").text( current_company.name );
     $('#modal--income').modal('toggle');
   });
 
@@ -113,6 +117,17 @@ $( document ).ready(function() {
     });
   });
 
+  $(".showCompanyDividends").click(function(){
+    $('#modal--company-dividend').modal('toggle');
+
+    socket.emit('get_company_dividends', { game_oid: game_oid });
+  });
+
+  $("#modal--company-dividend .modal-footer button").click(function(){
+    $('#modal--company-dividend').modal('toggle');
+
+    socket.emit('update_company_treasury', { game_oid: game_oid });
+  });
 
   $('.modal .spinner .btn:first-of-type').on('click', function() {
     var spinner = $(this).parent().parent().find('input');
@@ -259,6 +274,12 @@ $( document ).ready(function() {
     current_company = company;
   }
 
+  function confirmUserTreasury(){
+    if(current_company.stock_price > user_treasury){
+      alert_msg('modal-body', 'You do not have enough money to purchase that amount of stock.');
+    }
+  }
+
   function update(action){
     var company = current_company;
 
@@ -287,19 +308,32 @@ $( document ).ready(function() {
 
   function addCompanyDividends(){
 
-    html = '';
+    var html = '';
 
     for(var x=0,len=companies.length;x<len;x++){
       html += '<div class="col-xs-6 col-md-3">';
-        html += '<div class="panel panel-primary '+companies[x].tag+'"> ';
+        html += '<div class="panel panel-primary '+companies[x]+'"> ';
           html += '<div class="panel-heading">';
-            html += '<h3 class="panel-title">'+companies[x].name+'</h3>';
+            html += '<h3 class="panel-title"></h3>';
           html += '</div>';
           html += '<div class="panel-body" id="">';
-            html += '0';
+            html += 0;
           html += '</div>';
         html += '</div>';
       html += '</div>';
+    }
+
+    $("#modal--company-dividend .modal-body .row").html(html);
+  }
+
+  function updateCompanyDividends(dividends){
+    var tag;
+    console.log(dividends);
+    for(var x=0,len=companies.length;x<len;x++){
+      tag = companies[x];
+
+      $("#modal--company-dividend .panel."+tag+' .panel-title').html(dividends[tag].name.replace(' ', "<Br>"));
+      $("#modal--company-dividend .panel."+tag+' .panel-body').html(dividends[tag].dividend_payment);
     }
   }
 
@@ -336,13 +370,22 @@ $( document ).ready(function() {
     }
   });
 
+  socket.on('get_company_dividends', function(dividends){
+    updateCompanyDividends(dividends);
+  });
+
+  socket.on('update_company_treasury', function(dividends){
+    socket.emit('get_company', { game_oid: game_oid, company_name: $(".company .btn.active").text().toLowerCase() });
+  });
+
   socket.on('get_stock_values', function(obj){
     var cv = obj.companies;
     var company = $('.company .btn.active').text().toLowerCase();
 
     user_treasury = obj.user_treasury;
 
-    $(".modal .modal-header h5").text(cv[ company ].name );
+    $("#modal--buyStock .modal-header h5").text(cv[ company ].name );
+    $("#modal--income .modal-header h5").text(cv[ company ].name );
 
     var prv_sv = [], min_sv = 10;
     if(obj.purchase){
@@ -388,6 +431,10 @@ $( document ).ready(function() {
 
     nsp_socket.on('close_income_window', function(company){
       $('#modal--income').modal('toggle');
+    });
+
+    nsp_socket.on('close_company_dividend_window', function(company){
+      $('#modal--company-dividend').modal('toggle');
     });
   }
 

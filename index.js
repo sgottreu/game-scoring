@@ -65,6 +65,14 @@ io.on('connection', function(socket){
     getStockValues(obj);
   });
 
+  socket.on('get_company_dividends', function(obj){
+    getCompanyDividends(obj);
+  });
+
+  socket.on('update_company_treasury', function(obj){
+    saveCompanyDividends(obj);
+  });
+
   socket.on('modify_railroad_income', function(obj){
     updateRailroadIncome(obj);
   });
@@ -146,6 +154,45 @@ function getStockValues(obj){
       purchase: obj.purchase,
       user_treasury: game.users[obj.user].cash_total
     }); 
+  });
+}
+
+function getCompanyDividends(obj){
+  var dividend_payment = {};
+  var available_games = db.get('game-scoring--games');
+  console.log('Getting Company Dividends');
+  available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
+    var curr_company;
+    for(var x=0,len=companies.length;x<len;x++){
+      curr_company = game.companies[ companies[x] ];
+      dividend_payment[ companies[x] ] = {
+        name: curr_company.name,
+        dividend_payment: calcDividendPayment(curr_company.dividend, curr_company.remaining_stock)
+      };
+    }
+    io.emit('get_company_dividends', dividend_payment ); 
+  });
+}
+
+function saveCompanyDividends(obj){
+  var available_games = db.get('game-scoring--games');
+  console.log('Saving Company Dividends');
+  available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
+    var cc, treasury;
+    for(var x=0,len=companies.length;x<len;x++){
+      cc = game.companies[ companies[x] ];
+      treasury = game.companies[ companies[x] ].rr_treasury;
+      game.companies[ companies[x] ].rr_treasury = treasury + calcDividendPayment(cc.dividend, cc.remaining_stock);
+    }
+
+    available_games.update( { "_id" : monk.id(obj.game_oid) }, game )
+      .then(function(upd_game){
+        console.log('Company treasury updated');
+        io.emit('update_company_treasury', true ); 
+        nsp_socket[obj.user].emit('close_company_dividend_window', true);
+    });
+
+    io.emit('update_company_treasury', dividend_payment ); 
   });
 }
 
