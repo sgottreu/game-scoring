@@ -19,7 +19,14 @@
 <style>
 body{     padding: 5px 20px; }
 
-
+.pink .panel-heading { background-color: pink !important; background-image: none !important; color: #000 !important;}
+.red .panel-heading { background-color: red !important; background-image: none !important; }
+.blue .panel-heading { background-color: blue !important; background-image: none !important; }
+.black .panel-heading { background-color: black !important; background-image: none !important; }
+.yellow .panel-heading { background-color: yellow !important; background-image: none !important; color: #000 !important;}
+.brown .panel-heading { background-color: brown !important; background-image: none !important; }
+.purple .panel-heading { background-color: purple !important; background-image: none !important; }
+.green .panel-heading { background-color: green !important; background-image: none !important; }
 
 .company .btn { color: #fff !important; }
 
@@ -38,7 +45,15 @@ body{     padding: 5px 20px; }
 
 input[type="number"] { width: 40px; }
 
+.btn-toolbar.company_pane {
+  margin: 10px 20px;
+}
 
+.btn-toolbar.company_pane .btn-group {
+  margin-left: 20px;
+  margin-right: 20px;
+  width: 15%;
+}
 
 .spinner {
   width: 100px;
@@ -100,28 +115,57 @@ input[type="number"] { width: 40px; }
   font-size: 1.5em;
 }
 
-.purchaseCompanyStock, .increaseCompanyIncome {
+.purchaseCompanyStock, .increaseCompanyIncome, .showCompanyDividends, .showPlayerDividends  {
   margin: 10px 5px;
+}
+
+#modal--company-dividend .panel-heading {
+  font-weight: bold;
+  font-size: 1.5em;
+  text-align: center;
+}
+
+#modal--company-dividend .panel-body {
+  font-weight: bold;
+  font-size: 1.5em;
+  text-align: center;
 }
 
 </style>
 
-<div class="row">
 
-  <div class=".col-xs-12 .col-sm-6 .col-md-8 company_pane">
-    <h2>Company</h2>
+    <h2>Continental Divide</h2>
     <div class="company">
-      <button class="btn blue ">Blue</button>
-      <button class="btn red ">Red</button>
-      <button class="btn yellow ">Yellow</button>
-      <button class="btn pink ">Pink</button>
-      <button class="btn green ">Green</button>      
-      <button class="btn purple ">Purple</button>
-      <button class="btn brown ">Brown</button>
-      <button class="btn black ">Black</button>
+      <div class="btn-toolbar company_pane" role="toolbar" aria-label="...">
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn blue ">Blue</button>
+        </div>
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn red ">Red</button>
+        </div>
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn yellow ">Yellow</button>
+        </div>
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn pink ">Pink</button>
+        </div>
+      </div>
+      <div class="btn-toolbar company_pane" role="toolbar" aria-label="...">
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn green ">Green</button>    
+        </div>
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn purple ">Purple</button>
+        </div>
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn brown ">Brown</button>
+        </div>
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn black ">Black</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
+
 
 <div class="row company_pane__fields hidden">
   <div class="col-xs-6 col-md-3"> 
@@ -132,6 +176,21 @@ input[type="number"] { width: 40px; }
   <div class="col-xs-6 col-md-3"> 
     <button type="button" class="btn btn-primary increaseCompanyIncome hidden" autocomplete="off"> 
         Increase Income 
+      </button> 
+  </div>
+
+</div>
+
+<div class="row ">
+
+  <div class="col-xs-6 col-md-3"> 
+    <button type="button" class="btn btn-primary showCompanyDividends " autocomplete="off"> 
+        Company Dividends
+      </button> 
+  </div>
+  <div class="col-xs-6 col-md-3"> 
+    <button type="button" class="btn btn-primary showPlayerDividends " autocomplete="off"> 
+        Player Dividends
       </button> 
   </div>
 </div>
@@ -161,14 +220,19 @@ input[type="number"] { width: 40px; }
       <span id="rr_income__txt">0</span>  
     </div> 
   </div>
-  <div class="col-xs-6 col-md-3 hidden"> 
-    <div class="rr_treasury  txt_val "> 
-      <span>RR Treasury</span> 
-      <span id="rr_treasury__txt">0</span> 
-    </div> 
-  </div>
+
 </div>
 <div class="row company_pane__fields hidden">
+  <div class="col-xs-6 col-md-3 "> 
+    <div class="rr_treasury  panel panel-primary "> 
+      <div class="panel-heading">
+        <h3 class="panel-title">Treasury</h3>
+      </div>
+      <div class="panel-body" id="rr_treasury__txt">
+        0
+      </div>
+    </div> 
+  </div>
   <div class="col-xs-6 col-md-3"> 
     <div class="stock_price panel panel-primary"> 
       <div class="panel-heading">
@@ -191,6 +255,17 @@ input[type="number"] { width: 40px; }
   </div>
 
   <div class="col-xs-6 col-md-3"> 
+    <div class="dividend_payment panel panel-primary"> 
+      <div class="panel-heading">
+        <h3 class="panel-title">Div Pmt</h3>
+      </div>
+      <div class="panel-body" id="dividend_payment__txt">
+        0
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xs-6 col-md-3"> 
     <div class="remaining_stock panel panel-primary"> 
       <div class="panel-heading">
         <h3 class="panel-title">Stock Available</h3>
@@ -201,16 +276,6 @@ input[type="number"] { width: 40px; }
     </div>
   </div>
 
-  <div class="col-xs-6 col-md-3"> 
-    <div class="dividend_payment panel panel-primary"> 
-      <div class="panel-heading">
-        <h3 class="panel-title">Div Pmt</h3>
-      </div>
-      <div class="panel-body" id="dividend_payment__txt">
-        0
-      </div>
-    </div>
-  </div>
 </div>
 <div class="row">
   <div class=".col-xs-12 .col-sm-6 .col-md-8 log">
