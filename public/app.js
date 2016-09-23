@@ -14,6 +14,21 @@
 $( document ).ready(function() {
   socket.emit('available_games', {name: game_name});
 
+  if(user !== undefined && user !== null && user != ''){
+    $("#username").val(user);
+  }
+
+  /**** Navigation Tab Events ******/
+  $(".player_block").on('click', function(){
+    socket.emit('get_player_totals', { game_oid: game_oid, user: user });
+  });
+
+  $(".endofround_block").on('click', function(){
+
+  });
+
+  /*** Modal Setup ******/
+
   $('#modal--username').modal({
     show:true
   });
@@ -28,20 +43,19 @@ $( document ).ready(function() {
     $(".modal-backdrop").remove();
   });
 
-  if(user !== undefined && user !== null && user != ''){
-    $("#username").val(user);
-  } else {
-    $('#modal--username').modal('toggle');
-  }
 
-  $(".company .btn").click(function(){
-    $(".company .btn").removeClass('active');
+  // } else {
+  //   $('#modal--username').modal('toggle');
+  // }
+
+  $(".company_pane .btn").click(function(){
+    $(".company_pane .btn").removeClass('active');
     $(this).toggleClass('active');
 
     $(".purchaseCompanyStock").removeClass('hidden');
     $('.increaseCompanyIncome').removeClass('hidden');
 
-    socket.emit('get_company', { game_oid: game_oid, company_name: $(".company .btn.active").text().toLowerCase() });
+    socket.emit('get_company', { game_oid: game_oid, company_name: $(".company_pane .btn.active").text().toLowerCase() });
   });
 
   $("#modal--username button").click(function(event){
@@ -126,8 +140,20 @@ $( document ).ready(function() {
   $("#modal--company-dividend .modal-footer button").click(function(){
     $('#modal--company-dividend').modal('toggle');
 
-    socket.emit('update_company_treasury', { game_oid: game_oid });
+    socket.emit('update_company_treasury', { game_oid: game_oid, user: user });
   });
+
+
+  $(".showPlayerDividends ").click(function(){
+    $('#modal--player-dividend').modal('toggle');
+    socket.emit('get_player_dividends', { game_oid: game_oid, user: user });
+  });
+
+  $("#modal--player-dividend .modal-footer button").click(function(){
+    $('#modal--player-dividend').modal('toggle');
+    socket.emit('update_player_treasury', { game_oid: game_oid, user: user });
+  });
+
 
   $('.modal .spinner .btn:first-of-type').on('click', function() {
     var spinner = $(this).parent().parent().find('input');
@@ -326,6 +352,28 @@ $( document ).ready(function() {
     $("#modal--company-dividend .modal-body .row").html(html);
   }
 
+  function addPlayerDividends(users){
+
+    var html = '';
+
+    for (var user in users) {
+      if (users.hasOwnProperty(user)) {
+        html += '<div class="col-xs-6 col-md-3">';
+          html += '<div class="panel panel-primary '+users[user].tag+'"> ';
+            html += '<div class="panel-heading">';
+              html += '<h3 class="panel-title">'+users[user].name+'</h3>';
+            html += '</div>';
+            html += '<div class="panel-body" id="">';
+              html += 0;
+            html += '</div>';
+          html += '</div>';
+        html += '</div>';
+      }
+    }
+
+    $("#modal--player-dividend .modal-body .row").html(html);
+  }
+
   function updateCompanyDividends(dividends){
     var tag;
     console.log(dividends);
@@ -351,19 +399,21 @@ $( document ).ready(function() {
     game_oid = msg._id;
     user_treasury = msg.users[ msg.newest_user ].cash_total;
     log_actions(msg.newest_user+' has joined the game');
+
+    addPlayerDividends(msg.users);
   });
 
   socket.on('get_company', function(company){
     log_actions('information about '+company.name+' requested');
     
-    if($('.company .btn.active') && company.tag == $('.company .btn.active').text().toLowerCase() ){
+    if($('.company_pane .btn.active') && company.tag == $('.company_pane .btn.active').text().toLowerCase() ){
       $(".company_pane__fields").removeClass("hidden");
       populateCompany(company);
     } 
   });
 
   socket.on('update_company', function(company){
-    var active_company = $(".company .btn.active").text().toLowerCase();
+    var active_company = $(".company_pane .btn.active").text().toLowerCase();
 
     if(active_company == company.tag){
       populateCompany(company);
@@ -375,12 +425,12 @@ $( document ).ready(function() {
   });
 
   socket.on('update_company_treasury', function(dividends){
-    socket.emit('get_company', { game_oid: game_oid, company_name: $(".company .btn.active").text().toLowerCase() });
+    socket.emit('get_company', { game_oid: game_oid, company_name: $(".company_pane .btn.active").text().toLowerCase() });
   });
 
   socket.on('get_stock_values', function(obj){
     var cv = obj.companies;
-    var company = $('.company .btn.active').text().toLowerCase();
+    var company = $('.company_pane .btn.active').text().toLowerCase();
 
     user_treasury = obj.user_treasury;
 
@@ -436,6 +486,27 @@ $( document ).ready(function() {
     nsp_socket.on('close_company_dividend_window', function(company){
       $('#modal--company-dividend').modal('toggle');
     });
+
+    nsp_socket.on('close_player_dividend_window', function(company){
+      $('#modal--player-dividend').modal('toggle');
+    });
+
+    
+
+    nsp_socket.on('get_player_totals', function(player){
+      $('#user_treasury__txt').text(player.user_treasury);
+      $('#player_dividend__txt').text(player.dividend_payment);
+    });
+
+    nsp_socket.on('get_player_dividends', function(players){
+      console.log(players);
+      for (var user in players) {
+        if (players.hasOwnProperty(user)) {
+            $('#modal--player-dividend .'+players[user].tag+' .panel-body').text(players[user].dividend_payment);
+        }
+      }      
+    });
+
   }
 
 function inArray(needle, haystack) {
