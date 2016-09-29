@@ -2,6 +2,7 @@
   var game_name = 'continental_divide';
   var game_oid;
   var user = localStorage.getItem("game-scoring--username"); 
+  var userFullname = localStorage.getItem("game-scoring--fullname"); 
   var user_treasury = 0;
   var companies = ['blue','red', 'yellow', 'pink', 'green', 'purple', 'brown', 'black'];
 
@@ -15,7 +16,7 @@ $( document ).ready(function() {
   socket.emit('available_games', {name: game_name});
 
   if(user !== undefined && user !== null && user != ''){
-    $("#username").val(user);
+    $("#username").val(userFullname);
   }
 
   /**** Navigation Tab Events ******/
@@ -43,10 +44,9 @@ $( document ).ready(function() {
     $(".modal-backdrop").remove();
   });
 
-
-  // } else {
-  //   $('#modal--username').modal('toggle');
-  // }
+  $('.modal-footer button').on('click', function() {
+    $(".modal-backdrop").remove();
+  });
 
   $(".company_pane .btn").click(function(){
     $(".company_pane .btn").removeClass('active');
@@ -65,10 +65,15 @@ $( document ).ready(function() {
       if($("#username").val() == '' || _id === undefined || (_id == 'new' && numplayers === undefined)){
         alert_msg('modal-body', 'Please enter your username, game preference && number of players.');
       } else {
-        localStorage.setItem("game-scoring--username", $("#username").val() );
+        var username = $("#username").val();
+        username = username.replace(/[^a-z0-9]/gi, '_').toLowerCase(),
+
+        localStorage.setItem("game-scoring--username", username );
+        localStorage.setItem("game-scoring--fullname", $("#username").val() );
+
         var action = (_id == 'new') ? 'add_game_instance' : 'join_game_instance';
 
-        socket.emit('save username', $("#username").val());
+        socket.emit('save_username', {tag: username, name: $("#username").val() });
 
         setUserRoom();
         
@@ -78,9 +83,11 @@ $( document ).ready(function() {
               _id: $('.available_games_dd .dropdown.selected a').data('oid'),
               num_players: $('.num_players .dropdown.selected a').data('numplayers')
             },
-            user: $("#username").val()
+            user: {tag: username, name: $("#username").val() }
           }
         );
+
+        user = username;
         $('#modal--username').modal('toggle');
       }  
   });
@@ -92,6 +99,11 @@ $( document ).ready(function() {
       game_oid: game_oid,
       purchase: true,
       user: user
+    });
+
+    socket.emit('get_players', {
+      game_oid: game_oid,
+      client: user
     });
 
     confirmUserTreasury();
@@ -319,9 +331,10 @@ $( document ).ready(function() {
       game_oid: game_oid,
       action: action,
       company: company,
-      user: user,
+      user: $('.player_name select').val(),
       num_purchased_stocks: parseInt($(".num_purchased_stocks input").val()),
-      purchase_price: parseInt($(".purchase_price input").val())
+      purchase_price: parseInt($(".purchase_price input").val()),
+      client: user
     });
   }
 
@@ -376,7 +389,7 @@ $( document ).ready(function() {
 
   function updateCompanyDividends(dividends){
     var tag;
-    console.log(dividends);
+
     for(var x=0,len=companies.length;x<len;x++){
       tag = companies[x];
 
@@ -417,6 +430,10 @@ $( document ).ready(function() {
 
     if(active_company == company.tag){
       populateCompany(company);
+    }
+
+    if($("li.player_block").hasClass('active')){
+      socket.emit('get_player_totals', { game_oid: game_oid, user: user });
     }
   });
 
@@ -472,8 +489,14 @@ $( document ).ready(function() {
 
   });
 
+  socket.on('update_player_treasury', function(users){
+    if($("li.player_block").hasClass('active')){
+      socket.emit('get_player_totals', { game_oid: game_oid, user: user });
+    }
+  });
+
   function setUserRoom(){
-    nsp_socket = io('/'+$("#username").val() );
+    nsp_socket = io('/'+user );
 
     nsp_socket.on('close_purchase_window', function(company){
       $('#modal--buyStock').modal('toggle');
@@ -491,7 +514,14 @@ $( document ).ready(function() {
       $('#modal--player-dividend').modal('toggle');
     });
 
-    
+    nsp_socket.on('get_players', function(players){
+      var html = '', selected = '';
+      for(var x=0,len=players.length;x<len;x++){
+        selected = (players[x].name == user) ? 'selected' : '';
+        html += '<option '+selected+' value="'+players[x].tag+'">'+players[x].name+'</option>';
+      }
+      $(".player_name select").html(html);
+    }); 
 
     nsp_socket.on('get_player_totals', function(player){
       $('#user_treasury__txt').text(player.user_treasury);
