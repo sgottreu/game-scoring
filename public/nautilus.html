@@ -1,0 +1,494 @@
+<html>
+<head>
+<title>Nautilus Industries Scoring App</title>
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+
+  <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<link rel="stylesheet" href="font-awesome.min.css" crossorigin="anonymous">
+
+<style>
+  body { font-family: Roboto;}
+/*  input { font-size: 16px; width: 40px; text-align: center;}*/
+  .share_price { }
+  .share_price input { width: 40px;}
+  .name { width: 125px;}
+  .currency { width: 50px;}
+  .score { width: 50px; }
+  table { border-collapse: collapse; border: 1px solid #000; margin: 0 auto; }
+  th, td { padding: 5px;}
+  p { text-align: center;}
+
+  .header {
+    background: #34ade2; 
+  }
+
+
+.spinner {
+  width: 25px;
+}
+.spinner input {
+  text-align: right;
+  width: 50px !important;
+}
+.input-group-btn-vertical {
+  position: relative;
+  white-space: nowrap;
+  width: 1%;
+  vertical-align: middle;
+  display: table-cell;
+  left: 0%;
+}
+.input-group-btn-vertical > .btn {
+  display: block;
+  float: none;
+  width: 100%;
+  max-width: 100%;
+  padding: 8px;
+  margin-left: -1px;
+  position: relative;
+  border-radius: 0;
+  height: 21px;
+}
+.input-group-btn-vertical > .btn:first-child {
+  border-top-right-radius: 4px;
+}
+.input-group-btn-vertical > .btn:last-child {
+  margin-top: -2px;
+  border-bottom-right-radius: 4px;
+}
+.input-group-btn-vertical i{
+  position: absolute;
+  top: 0;
+  left: 4px;
+}
+
+.players .form-control {
+  width: 30px;
+}
+
+#modal--stock_price h3, #modal--player_add h3 {
+  display: inline-block;
+}
+#modal--stock_price .panel, #modal--player_add .panel {
+  width: 90%;
+  margin: 10 auto;
+}
+
+#modal--stock_price .panel input, #modal--player_add .panel input {
+  width: 50px;
+  height: 40px;
+  font-size:24px;
+  text-align: center;
+}
+
+#name_player_input {
+  width: 300px !important;
+  text-align: left !important;
+}
+
+</style>
+</head>
+<body>
+
+<table border="1">
+	<tr>
+    <th rowspan="2" class="header">
+      <img src="/images/nautilus_logo.png" width="100">
+    </th>
+    <th colspan="1" rowspan="2" class="header">
+      <img width="75" src="/images/ni_currency.png">
+    </th>
+    <th colspan="1" class="header">
+      <img width="75" src="/images/ni_gold.png">
+    </th>
+    <th colspan="1" class="header">
+      <img width="75" src="/images/ni_darrillium.png">
+    </th>
+    <th colspan="1" class="header">
+      <img width="75" src="/images/ni_nitronium.png">
+    </th>
+    <th colspan="1" class="header">
+      <img width="75" src="/images/ni_elerium.png">
+    </th>
+    <th colspan="1" class="header">
+      <img width="75" src="/images/ni_iron.png">
+    </th>
+    <th colspan="1" rowspan="2" class="header">
+      Score
+    </th>
+  </tr>
+  <tr class="share_price">
+    <th colspan="1" id="gold_price" >1
+    </th>
+    <th colspan="1" id="blue_price" >1
+    </th>
+    <th colspan="1" id="orange_price" >1
+    </th>
+    <th colspan="1" id="green_price" >1
+    </th>
+    <th colspan="1" id="black_price" >1
+    </th>
+
+  </tr>
+
+</table>
+<button type="button" class="btn btn-primary btnStockPrices " autocomplete="off"> 
+  Stock Prices
+</button> 
+
+<button type="button" class="btn btn-primary btnPlayerScores " autocomplete="off"> 
+  Player Scores
+</button> 
+
+<div class="modal fade" tabindex="-1" role="dialog" id="modal--stock_price">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Stock Prices</h4>
+        <h5></h5>
+      </div>
+      <div class="modal-body">
+        <div class="row ">
+          <div class="stock_price panel panel-success"> 
+            <div class="panel-heading">
+              <img width="50" src="/images/ni_gold.png">
+              
+              <h3>Gold</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="text" id="gold_price_input" value="1">
+              <div class="input-group-btn-vertical"> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
+              </div> 
+            </div>
+            </div>
+          </div>
+          <div class="stock_price panel panel-success"> 
+            <div class="panel-heading">
+              <img width="50" src="/images/ni_darrillium.png">
+              
+              <h3>Blue</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="text" id="blue_price_input" value="1">
+              <div class="input-group-btn-vertical"> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
+              </div> 
+            </div>
+            </div>
+          </div>
+          <div class="stock_price panel panel-success"> 
+            <div class="panel-heading">
+              <img width="50" src="/images/ni_nitronium.png">
+              
+              <h3>Orange</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="text" id="orange_price_input" value="1">
+              <div class="input-group-btn-vertical"> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
+              </div> 
+            </div>
+            </div>
+          </div>
+          <div class="stock_price panel panel-success"> 
+            <div class="panel-heading">
+              <img width="50" src="/images/ni_elerium.png">
+              
+              <h3>Green</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="text" id="green_price_input" value="1">
+              <div class="input-group-btn-vertical"> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
+              </div> 
+            </div>
+            </div>
+          </div>
+          <div class="stock_price panel panel-success"> 
+            <div class="panel-heading">
+              <img width="50" src="/images/ni_iron.png">
+              
+              <h3>Black</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="text" id="black_price_input" value="1">
+              <div class="input-group-btn-vertical"> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
+              </div> 
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Save</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<div class="modal fade" tabindex="-1" role="dialog" id="modal--player_add">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Player Score</h4>
+        <h5></h5>
+      </div>
+      <div class="modal-body">
+        <div class="row ">
+          <div class="player_info panel panel-success"> 
+            <div class="panel-heading">
+              <h3>Name</h3>
+            </div>
+            <div class="panel-body" >
+              <input type="text" id="name_player_input">
+            </div>
+          </div>
+
+          <div class="player_info panel panel-success"> 
+            <div class="panel-heading">
+              <img width="50" src="/images/ni_currency.png">
+              
+              <h3>Currency</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="text" id="currency_player_input" value="0">
+              <div class="input-group-btn-vertical"> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
+              </div> 
+            </div>
+            </div>
+          </div>
+
+          <div class="player_info panel panel-success"> 
+            <div class="panel-heading">
+              <img width="50" src="/images/ni_gold.png">
+              
+              <h3>Gold</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="text" id="gold_player_input" value="0">
+              <div class="input-group-btn-vertical"> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
+              </div> 
+            </div>
+            </div>
+          </div>
+          <div class="player_info panel panel-success"> 
+            <div class="panel-heading">
+              <img width="50" src="/images/ni_darrillium.png">
+              
+              <h3>Blue</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="text" id="blue_player_input" value="0">
+              <div class="input-group-btn-vertical"> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
+              </div> 
+            </div>
+            </div>
+          </div>
+          <div class="player_info panel panel-success"> 
+            <div class="panel-heading">
+              <img width="50" src="/images/ni_nitronium.png">
+              
+              <h3>Orange</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="text" id="orange_player_input" value="0">
+              <div class="input-group-btn-vertical"> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
+              </div>
+            </div> 
+            </div>
+          </div>
+          <div class="player_info panel panel-success"> 
+            <div class="panel-heading">
+              <img width="50" src="/images/ni_elerium.png">
+              
+              <h3>Green</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="text" id="green_player_input" value="0">
+              <div class="input-group-btn-vertical"> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
+              </div>
+            </div> 
+            </div>
+          </div>
+          <div class="player_info panel panel-success"> 
+            <div class="panel-heading">
+              <img width="50" src="/images/ni_iron.png">
+              
+              <h3>Black</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="text" id="black_player_input" value="0">
+              <div class="input-group-btn-vertical"> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
+                <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
+              </div> 
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Save</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+
+<script src="https://code.jquery.com/jquery-3.1.0.min.js" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<!-- <p>The share modifiers for each stock go in the top row. Then add the currency & total shares for each player.</p> -->
+<script>
+(function($){
+  var companies = ['gold', 'blue', 'orange', 'green', 'black'];
+  var html = '';
+
+$(".btnStockPrices").click(function(){
+  $('#modal--stock_price').modal('toggle');
+
+});
+
+$('#modal--stock_price').modal({
+  show:false
+});
+
+
+$(".btnPlayerScores").click(function(){
+  $('#modal--player_add').modal('toggle');
+
+});
+
+$('#modal--player_add').modal({
+  show:false
+});
+
+$('#modal--stock_price .modal-footer .btn').click(function(){
+  $('#modal--stock_price').modal('toggle');
+  for(var z=0,len=companies.length;z<len;z++){
+    $("#"+companies[z]+'_price').text( $("#"+companies[z]+'_price_input').val() );
+  }
+});
+
+  var existingPlayer = false;
+
+  function addPlayerScore(){
+      html += '<tr class="players">';
+      html += '<th class="player_name"><span class="name">'+$("#name_player_input").val()+'</span><span class="glyphicon glyphicon-pencil hidden" aria-hidden="true"></span></th>';
+      html += '<th class="currency" >'+$("#currency_player_input").val()+'</th>';
+
+      for(var z=0,len=companies.length;z<len;z++){
+        html += '<th colspan="1" class="'+companies[z]+'_shares">'+$("#"+companies[z]+"_player_input").val()+'</th>';
+      }
+      html += '<th class="score">0</th>';
+      html += '</tr>';
+
+
+    $('table').append(html);
+
+    $('.player_name').mouseenter( function(){
+      $(this).find('.glyphicon').removeClass('hidden');
+    } ).mouseleave( function(){
+      $(this).find('.glyphicon').addClass('hidden');
+    } );
+
+    $(".glyphicon-pencil").on('click', function(e){
+      var parent = $(this).parent().parent();
+
+      $("#name_player_input").val( $(parent).find('.name').text() );
+      $("#currency_player_input").val( $(parent).find('.currency').text() );
+      
+      for(var z=0,len=companies.length;z<len;z++){
+        $("#"+companies[z]+"_player_input").val( $(parent).find('.'+companies[z]+'_shares').text() );
+      }
+
+      $('#modal--player_add').modal('toggle');
+      existingPlayer = true;
+    });
+  }
+
+  $('.modal .spinner .btn:first-of-type').on('click', function() {
+    var spinner = $(this).parent().parent().find('input');
+    var val = parseInt($(spinner).val(), 10);
+    $(spinner).val(val+1);
+  });
+
+  $('.modal .spinner .btn:last-of-type').on('click', function() {
+    var spinner = $(this).parent().parent().find('input');
+    var val = parseInt($(spinner).val(), 10);
+    if(val > 0){
+      $(spinner).val(val-1);
+    }
+    
+  });
+
+  $('#modal--player_add .modal-footer .btn').click(function(){   
+    if(!existingPlayer){
+      addPlayerScore();
+    }
+    
+    existingPlayer = false;
+
+    $(".score").each(function(i, value) {
+      var score =  parseInt($("#currency_player_input").val()) +  
+          ( parseInt($("#gold_player_input").val()) * parseInt($("#gold_price").text() ) ) +      
+          ( parseInt($("#blue_player_input").val()) * parseInt($("#blue_price").text()) )  + 
+          ( parseInt($("#orange_player_input").val()) * parseInt($("#orange_price").text()) )  +    
+          ( parseInt($("#green_player_input").val()) * parseInt($("#green_price").text()) )  + 
+          ( parseInt($("#black_player_input").val()) * parseInt($("#black_price").text()) ) ;
+
+      $(".score")[i].innerHTML = (score);       
+    });
+    $('#modal--player_add').modal('toggle');
+
+    $("#name_player_input").val('');
+    $("#currency_player_input").val(0);
+    $("#gold_player_input").val(0);     
+    $("#blue_player_input").val(0);
+    $("#orange_player_input").val(0);  
+    $("#green_player_input").val(0);
+    $("#black_player_input").val(0);
+  });
+
+})(jQuery);
+</script>
+
+</body>
+</html>
