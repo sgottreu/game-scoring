@@ -29,7 +29,19 @@ app.set('port', port);
 app.use(express.static('public'));
 
 app.get('/', function(req, res){
+  res.sendFile(__dirname + '/index.html');
+});
+
+app.get('/continental_divide', function(req, res){
   res.sendFile(__dirname + '/continental_divide.html');
+});
+
+app.get('/nautilus', function(req, res){
+  res.sendFile(__dirname + '/public/nautilus.html');
+});
+
+app.get('/tesla', function(req, res){
+  res.sendFile(__dirname + '/public/tesla.html');
 });
 
 io.on('connection', function(socket){
