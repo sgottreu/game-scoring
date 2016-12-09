@@ -2,18 +2,26 @@
   "name": "game-scoring",
   "version": "0.0.1",
   "description": "",
-  "start": "node app.js",
   "dependencies": {
     "express": "^4.14.0",
     "moment": "^2.14.1",
     "mongodb": "^2.2.9",
     "monk": "^3.1.2",
+    "morgan": "^1.7.0",
     "socket.io": "^1.4.8"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
+    "chai-http": "^3.0.0",
     "eslint": "^3.5.0",
     "eslint-config-google": "^0.6.0",
+    "mocha": "^3.1.2",
+    "mongoose": "^4.6.3",
     "nodemon": "^1.10.2",
     "uglify-js": "^2.7.3"
+  },
+  "scripts": {
+    "start": "SET NODE_ENV=dev && node index.js",
+    "test": "mocha --timeout 10000"
   }
 }
