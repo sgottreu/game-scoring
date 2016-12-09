@@ -511,6 +511,8 @@ navigator.geolocation.getCurrentPosition(function(position) {
       html += '<a href="#" class="dropdown-toggle" id="'+games[x]._id+'" data-creator="'+games[x].creator.name+'" data-oid="'+games[x]._id+'" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">';
       html += games[x].creator.name+' - Dist: '+games[x].distance;
       html += '</a></li>';
+
+      log_actions(games[x].creator.name+' - Dist: '+games[x].distance);
     }
     $('.dropdown-menu[aria-labelledby="available_games_dd"]').html(html);
 
