@@ -21,7 +21,7 @@
     "uglify-js": "^2.7.3"
   },
   "scripts": {
-    "start": "SET NODE_ENV=dev && node index.js",
+    "start": "node index.js",
     "test": "mocha --timeout 10000"
   }
 }
