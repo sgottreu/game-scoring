@@ -3,9 +3,8 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var express = require('express');
 
-// var db_config = require('./db_config');
-// var node_env = process.env.NODE_ENV.trim();
-var db_collection = "game-scoring--games";//db_config[node_env];
+var bodyParser = require('body-parser');
+var db_collection = "game-scoring--games";
 
 var mongo = require('mongodb');
 var monk = require('monk');
@@ -29,6 +28,12 @@ var player_amts = {
     6: 40
   };
 
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+app.use(bodyParser.json());
+
 var port = process.env.PORT || '3000';
 app.set('port', port);
 
@@ -49,6 +54,12 @@ app.get('/nautilus', function(req, res){
 app.get('/tesla', function(req, res){
   res.sendFile(__dirname + '/public/tesla.html');
 });
+
+app.get('/game/:game_id', function(req, res){
+  var game_id = req.params.game_id;
+  res.redirect('/continental_divide.html?gameid='+game_id);
+});
+
 
 io.on('connection', function(socket){
   console.log('client connected');
@@ -114,11 +125,6 @@ io.on('connection', function(socket){
     getPlayers(obj);
   });
 
-  // socket.on('current_location', function(obj){
-  //   console.log(obj.lat);
-  //   console.log(obj.lon);
-  // });
-
 });
 
 http.listen(port, function(){
@@ -142,16 +148,15 @@ function createNamespace(user){
 function emitAvailableGames(io, game){
 	var available_games = db.get(db_collection);
   available_games.find({ name: game.name }).then(function(docs) {
-    console.log(docs);
     for(var x=0,len=docs.length;x<len;x++){
 			docs[x] = setGameAttrib(docs[x], game._id, game.location);
 		}
-    docs = getNearbyGames(docs);
+    docs = getNearbyGames(docs, game.game_oid);
   	io.emit('available_games', docs);
   });
 }
 
-function getNearbyGames(docs){
+function getNearbyGames(docs, game_oid){
   docs.sort(compareDistance);
 
   var nearby = [];
@@ -159,6 +164,12 @@ function getNearbyGames(docs){
   for(var x=0,len=docs.length;x<len;x++){
     if(docs[x].distance <= 15){
       nearby.push(docs[x]);
+    } else {
+      if(game_oid !== undefined){
+        if(game_oid == docs[x]._id){
+          nearby.push(docs[x]);
+        }
+      }
     }
   }
   return nearby;
@@ -192,7 +203,7 @@ function addGameInstance(io, obj){
 
   available_games.insert( game_obj).then(function (data) {
     emitAvailableGames(io, data);
-    data.newest_user = obj.user;
+    data.newest_user = keyify(obj.user);
     io.emit('joined_game', data);
   });
 }
@@ -204,7 +215,7 @@ function joinGameInstance(io, obj){
 
   available_games.findOne({ "_id" : monk.id(obj.game._id) }).then(function(game) {
     console.log('game found');
-    if(game.users[ keyify(user.tag) ] === undefined){
+    if(game.users[ keyify(obj.user.tag) ] === undefined){
       game.users = buildNewUserInstance(obj, game);
 
       available_games.findOneAndUpdate(
@@ -212,12 +223,12 @@ function joinGameInstance(io, obj){
         game
       ).then(function(docs) {
         console.log('Joining game');
-        docs = setGameAttrib(docs, obj.game._id, obj.location, obj.user);
+        docs = setGameAttrib(docs, obj.game._id, obj.user.location, obj.user);
         io.emit('joined_game', docs);
       });
     } else {
       console.log('Joining game already a part of');
-      game = setGameAttrib(game, obj.game._id, obj.location, obj.user);
+      game = setGameAttrib(game, obj.game._id, obj.user.location, obj.user);
       io.emit('joined_game', game);
     }
   });
@@ -305,12 +316,14 @@ function setGameAttrib(game, _id, location, user){
   game.date = moment(game._id.getTimestamp()).format("MM/DD/YYYY");
   game.selected = (_id !== undefined && _id.toString() == game._id.toString()) ? true : false;
   if(user !== undefined){
-    game.newest_user = user.tag;
+    game.newest_user = keyify(user.tag);
   }
+
   var game_loc = game.location;
 
   game.distance = greatCircleDistance([location.lat, location.lon], [game_loc.lat, game_loc.lon]);
   game.distance = Math.round((game.distance + 0.00001) * 1000) / 1000;
+
   return game;
 }
 
@@ -321,9 +334,11 @@ function getPlayers(obj){
     var players = [];
     for (var u in game.users) {
       if (game.users.hasOwnProperty(u)) {
-        players.push({name: game.users[u].name, tag: game.users[u].tag });
+        players.push({name: game.users[u].name, tag: keyify(game.users[u].tag) });
       }
     }
+console.log(obj.client);
+console.log(players);
     nsp_socket[obj.client].emit('get_players', players);
 
   });
@@ -406,7 +421,7 @@ function getPlayerDividends(obj){
     for (var user in db_game.users) {
       if (db_game.users.hasOwnProperty(user)) {
         users[user] = calcPlayerDividend(db_game.users[user], db_game.companies);
-        users[user].tag = db_game.users[user].tag;
+        users[user].tag = keyify(db_game.users[user].tag);
       }
     }
 
@@ -461,7 +476,7 @@ function buildGameInstance(obj){
   var game_obj = {
     name: obj.game.name,
     users: user,
-    location: obj.game.location,
+    location: obj.user.location,
     num_players: obj.game.num_players,
     companies: {},
     creator: obj.user
@@ -503,7 +518,8 @@ function buildUserObj(user, num_players){
 
   return {
     name: user.name,
-    tag: user.tag,
+    email: user.email,
+    tag: keyify(user.tag),
     companies: {},
     cash_total: player_amts[num_players],
     dividend_payment: 0

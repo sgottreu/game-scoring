@@ -2,6 +2,7 @@
   var game_name = 'continental_divide';
   var game_oid;
   var user = localStorage.getItem("game-scoring--username");
+  var email = localStorage.getItem("game-scoring--email");
   var userFullname = localStorage.getItem("game-scoring--fullname");
   var user_treasury = 0;
   var companies = ['blue','red', 'yellow', 'pink', 'green', 'purple', 'brown', 'black'];
@@ -13,11 +14,9 @@
   var nsp_socket;
 
 $( document ).ready(function() {
-  
-
   if(user !== undefined && user !== null && user != ''){
     $("#name").val(userFullname);
-    $("#username").val(user);
+    $("#email").val(email);
   }
 
   /**** Navigation Tab Events ******/
@@ -36,6 +35,10 @@ $( document ).ready(function() {
   });
 
   $('#modal--buyStock').modal({
+    show:false
+  });
+
+  $('#modal--gameLink').modal({
     show:false
   });
 
@@ -63,20 +66,23 @@ $( document ).ready(function() {
     var _id = $('.available_games_dd .dropdown.selected a').data('oid');
     var numplayers = $('.num_players .dropdown.selected a').data('numplayers');
 
-      if($("#username").val() == '' || _id === undefined || (_id == 'new' && numplayers === undefined)){
+      if($("#email").val() == '' || _id === undefined || (_id == 'new' && numplayers === undefined)){
         alert_msg('modal-body', 'Please enter your username, game preference && number of players.');
       } else {
-        var username = $("#username").val();
-        username = username.toLowerCase(),
+        var username = $("#email").val();
+        username = keyify(username.toLowerCase()),
+
+        user = username;
 
         localStorage.setItem("game-scoring--username", username );
+        localStorage.setItem("game-scoring--email", $("#email").val() );
         localStorage.setItem("game-scoring--fullname", $("#name").val() );
 
         var current_location = JSON.parse(localStorage.getItem("game-scoring--current_location"));
 
         var action = (_id == 'new') ? 'add_game_instance' : 'join_game_instance';
 
-        socket.emit('save_username', {tag: username, name: $("#name").val(), location: current_location });
+        socket.emit('save_username', {tag: username, email: $("#email").val(), name: $("#name").val(), location: current_location });
 
         setUserRoom();
 
@@ -84,10 +90,9 @@ $( document ).ready(function() {
           { game: {
               name: game_name,
               _id: $('.available_games_dd .dropdown.selected a').data('oid'),
-              num_players: $('.num_players .dropdown.selected a').data('numplayers'),
-              location: current_location
+              num_players: $('.num_players .dropdown.selected a').data('numplayers')
             },
-            user: {tag: username, name: $("#name").val(), location: current_location }
+            user: {tag: username, name: $("#name").val(), email: $("#email").val(), location: current_location }
           }
         );
 
@@ -170,6 +175,9 @@ $( document ).ready(function() {
     socket.emit('update_player_treasury', { game_oid: game_oid, user: user });
   });
 
+  $("#modal--gameLink .modal-footer button").click(function(){
+    $('#modal--gameLink').modal('toggle');
+  });
 
   $('.modal .spinner .btn:first-of-type').on('click', function() {
     var spinner = $(this).parent().parent().find('input');
@@ -184,25 +192,40 @@ $( document ).ready(function() {
   });
 
   $('.available_games_dd').on('click', function(e) {
+    var og_label = 'Game Instance', new_label;
+
     $('.available_games_dd .dropdown').removeClass('selected');
 
     if(e.originalEvent.target.id !== ''){
       $('#'+e.originalEvent.target.id).parent().addClass('selected');
 
       if(e.originalEvent.target.id == "new_instance"){
+        new_label = og_label+' - Add New Game';
         $("#num_players").parent().removeClass('hidden');
       } else {
+        new_label = og_label+' - Creator: '+$('#'+e.originalEvent.target.id).data('creator');
         $("#num_players").parent().addClass('hidden');
       }
-    }
 
+      $("#available_games_dd").html(new_label+' <span class="caret"></span>');
+    }
   });
 
   $('.num_players').on('click', function(e) {
     $('.num_players .dropdown').removeClass('selected');
     if(e.originalEvent.target.id !== ''){
+      var og_label = 'Number of Players', new_label;
+
       $('#'+e.originalEvent.target.id.toString() ).parent().addClass('selected');
+    
+      new_label = og_label+' - '+$('#'+e.originalEvent.target.id).data('numplayers');
+
+      $("#num_players").html(new_label+' <span class="caret"></span>');
     }
+  });
+
+  $(".game_link_block").on('click', function(e){ 
+    createGameLink();
   });
 
 });
@@ -212,6 +235,29 @@ $( document ).ready(function() {
     $('.'+klass+' .alert').fadeTo(2000, 500).slideUp(500, function(){
       $('.'+klass+' .alert').slideUp(500);
       $('.'+klass+' .alert').remove();
+    });
+  }
+
+  function createGameLink(){
+    var focusedElement, url;
+
+    if(getQueryVariable('game_id') === undefined){
+      url = window.location+'?game_id='+game_oid;
+    } else {
+      url = window.location;
+    }
+
+    $(".game_link_txt").val(url);
+    // $('.game_link_txt').focus();
+
+    // setTimeout(function () { 
+    //   $('.game_link_txt').select(); 
+    // }, 100); 
+
+    $(document).on('focus', '.game_link_txt', function () {
+      if (focusedElement == this) return; //already focused, return so user can now place cursor at specific point in input.
+      focusedElement = this;
+      setTimeout(function () { focusedElement.select(); }, 50); //select all text in any field on focus for easy re-entry. Delay sightly to allow focus to "stick" before selecting.
     });
   }
 
@@ -402,6 +448,27 @@ $( document ).ready(function() {
     }
   }
 
+  function preselectGameInstance(game_oid){
+    var og_label = 'Game Instance', new_label;
+    $('.available_games_dd .dropdown').removeClass('selected');
+
+    if(game_oid !== ''){
+      $('#'+game_oid).parent().addClass('selected');
+
+      if(game_oid == "new_instance"){
+        new_label = og_label+' - Add New Game';
+        $("#num_players").parent().removeClass('hidden');
+      } else {
+        new_label = og_label+' - Creator: '+$('#'+game_oid).data('creator');
+        $("#num_players").parent().addClass('hidden');
+      }
+
+      $("#available_games_dd").html(new_label+' <span class="caret"></span>');
+    }
+  
+  }
+
+
 /**** GeoLocation ******/
 
 
@@ -428,11 +495,11 @@ navigator.geolocation.getCurrentPosition(function(position) {
   var coords = {lat: position.coords.latitude, lon: position.coords.longitude };
   localStorage.setItem("game-scoring--current_location", JSON.stringify(coords) );
 
-  socket.emit('available_games', {name: game_name, location: coords});
-//   var current_location = JSON.parse(localStorage.getItem("game-scoring--current_location"));
+  if(getQueryVariable('game_id')){
+    game_oid = getQueryVariable('game_id');
+  }
 
-// console.log(current_location);
-//   socket.emit('current_location', current_location);
+  socket.emit('available_games', {name: game_name, location: coords, game_oid: game_oid});
 });
 
 /******** Socket IO commands *****/
@@ -441,11 +508,15 @@ navigator.geolocation.getCurrentPosition(function(position) {
     var html = '<li role="presentation" class="dropdown"><a href="#" class="dropdown-toggle" id="new_instance" data-toggle="dropdown" data-oid="new" role="button" aria-haspopup="true" aria-expanded="false">+ Add New Instance</a></li>';
     for(var x=0,len=games.length;x<len;x++){
       html += '<li role="presentation" class="dropdown">';
-      html += '<a href="#" class="dropdown-toggle" id="'+games[x]._id+'" data-oid="'+games[x]._id+'" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">';
+      html += '<a href="#" class="dropdown-toggle" id="'+games[x]._id+'" data-creator="'+games[x].creator.name+'" data-oid="'+games[x]._id+'" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">';
       html += games[x].creator.name+' - Dist: '+games[x].distance;
       html += '</a></li>';
     }
     $('.dropdown-menu[aria-labelledby="available_games_dd"]').html(html);
+
+    if(game_oid !== undefined){
+      preselectGameInstance(game_oid);
+    }
   });
 
   socket.on('joined_game', function(msg){
@@ -536,7 +607,7 @@ navigator.geolocation.getCurrentPosition(function(position) {
   });
 
   function setUserRoom(){
-    nsp_socket = io('/'+keyify(user) );
+    nsp_socket = io('/'+user );
 
     nsp_socket.on('close_purchase_window', function(company){
       $('#modal--buyStock').modal('toggle');
@@ -593,4 +664,15 @@ function keyify(key){
 
 function sortNumber(a,b) {
     return a - b;
+}
+
+function getQueryVariable(variable) {
+    var query = window.location.search.substring(1);
+    var vars = query.split('&');
+    for (var i = 0; i < vars.length; i++) {
+        var pair = vars[i].split('=');
+        if (decodeURIComponent(pair[0]) == variable) {
+            return decodeURIComponent(pair[1]);
+        }
+    }
 }

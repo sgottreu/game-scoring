@@ -143,6 +143,19 @@ input[type="number"] { width: 40px; }
   text-align: center;
 }
 
+.game_link_txt {
+  width: 550px;
+  text-align: center;
+  margin: 0px auto;
+  display: block;
+}
+
+#game_link_block h4 { text-align: center; }
+
+.company_name {text-transform:capitalize;}
+#modal--income h5, #modal--buyStock h5 {text-transform:capitalize;}
+#modal--company-dividend .panel-primary {text-transform:capitalize;}
+
 </style>
 
  <h2>Continental Divide</h2>
@@ -151,15 +164,21 @@ input[type="number"] { width: 40px; }
 <div class="panel with-nav-tabs panel-default">
   <div class="panel-heading">
     <ul class="nav nav-tabs" role="tablist">
-      <li role="presentation" class="company_block active"><a href="#company_block" aria-controls="company_block" role="tab" data-toggle="tab">Company</a></li>
-      <li role="presentation" class="player_block"><a href="#player_block" aria-controls="player_block" role="tab" data-toggle="tab">Player</a></li>
-      <li role="presentation" class="endofround_block"><a href="#endofround_block" aria-controls="endofround_block" role="tab" data-toggle="tab">End of Round</a></li>
+      <li role="presentation" class="company_block active"><a href="#company_block" aria-controls="company_block" role="tab" data-toggle="tab"><i class="fa fa-building" aria-hidden="true"></i> Company</a></li>
+      <li role="presentation" class="player_block"><a href="#player_block" aria-controls="player_block" role="tab" data-toggle="tab"><i class="fa fa-user" aria-hidden="true"></i> Player</a></li>
+      <li role="presentation" class="endofround_block"><a href="#endofround_block" aria-controls="endofround_block" role="tab" data-toggle="tab"><i class="fa fa-clock-o" aria-hidden="true"></i> End of Round</a></li>
+      <li role="presentation" class="game_link_block"><a href="#game_link_block" aria-controls="game_link_block" role="tab" data-toggle="tab"><i class="fa fa-share-alt" aria-hidden="true"></i> Share Game</a></li>
 
     </ul>
   </div>
 
 <div class="panel-body">
 <div class="tab-content">
+
+<div role="tabpanel" class="tab-pane" id="game_link_block">
+  <h4 >Share Game Instance</h4>
+  <input type="text" class="game_link_txt " >
+</div>
 
 <div role="tabpanel" class="tab-pane active" id="company_block">
     
@@ -342,7 +361,12 @@ input[type="number"] { width: 40px; }
   <div class=".col-xs-12 .col-sm-6 .col-md-8 log">
   </div>
 </div>
-
+<!-- <div class="row">
+  <div class=".col-xs-12 .col-sm-6 .col-md-8 gamelink">
+    <button class="btn btn-primary game_link_btn" class="game_link_btn">Share Game Link</button>
+    
+  </div>
+</div> -->
 
 <div class="modal fade" tabindex="-1" role="dialog" id="modal--username">
   <div class="modal-dialog" role="document">
@@ -354,15 +378,10 @@ input[type="number"] { width: 40px; }
       <div class="modal-body">
         Name: <input type="text" id="name">
         <br><br>
-        Email: <input type="text" id="username">
+        Email: <input type="text" id="email">
         <br><br>
         <div class="dropdown">
           <a href="#" class="btn btn-primary dropdown-toggle" id="available_games_dd" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Game Instance <span class="caret"></span> </a>
-<!--           <div class="panel panel-default">
-            <div class="panel-body">
-              
-            </div>
-          </div> -->
           <ul class="dropdown-menu available_games_dd" aria-labelledby="available_games_dd">            
           </ul>
         </div>
@@ -373,7 +392,7 @@ input[type="number"] { width: 40px; }
             <li role="presentation" class="dropdown"><a href="#" id="num_players3" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numplayers="3">3</a></li> 
             <li role="presentation" class="dropdown"><a href="#" id="num_players4" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numplayers="4">4</a></li> 
             <li role="presentation" class="dropdown"><a href="#" id="num_players5" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numplayers="5">5</a></li> 
-            <li role="presentation" class="dropdown"><a href="#" id="num_players6" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" id=num_players6" data-numplayers="6">6</a></li>     
+            <li role="presentation" class="dropdown"><a href="#" id="num_players6" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" data-numplayers="6">6</a></li>     
           </ul>
         </div>
       </div>
@@ -410,8 +429,8 @@ input[type="number"] { width: 40px; }
                 <div class="input-group spinner"> 
                   <input type="text" class="form-control" value="0" data-action="stock_value"> 
                   <div class="input-group-btn-vertical"> 
-                    <button class="btn btn-default" type="button" data-action="stock_value"><i class="fa fa-caret-up"></i></a> 
-                    <button class="btn btn-default" type="button" data-action="stock_value"><i class="fa fa-caret-down"></i></a> 
+                    <button class="btn btn-default" type="button" data-action="stock_value"><i class="fa fa-caret-up"></i></button> 
+                    <button class="btn btn-default" type="button" data-action="stock_value"><i class="fa fa-caret-down"></i></button> 
                   </div> 
                 </div>
               </span> 
@@ -426,8 +445,8 @@ input[type="number"] { width: 40px; }
                 <div class="input-group spinner"> 
                   <input type="text" class="form-control" value="0" data-action="stocks_issued"> 
                   <div class="input-group-btn-vertical"> 
-                    <button class="btn btn-default" type="button" data-action="stocks_issued"><i class="fa fa-caret-up"></i></a> 
-                    <button class="btn btn-default" type="button" data-action="stocks_issued"><i class="fa fa-caret-down"></i></a> 
+                    <button class="btn btn-default" type="button" data-action="stocks_issued"><i class="fa fa-caret-up"></i></button> 
+                    <button class="btn btn-default" type="button" data-action="stocks_issued"><i class="fa fa-caret-down"></i></button> 
                   </div> 
                 </div>
               </span> 
@@ -442,8 +461,8 @@ input[type="number"] { width: 40px; }
                 <div class="input-group spinner"> 
                   <input type="text" class="form-control" value="1" > 
                   <div class="input-group-btn-vertical"> 
-                    <button class="btn btn-default" type="button" data-action="num_purchased_stocks"><i class="fa fa-caret-up"></i></a> 
-                    <button class="btn btn-default" type="button" data-action="num_purchased_stocks"><i class="fa fa-caret-down"></i></a> 
+                    <button class="btn btn-default" type="button" data-action="num_purchased_stocks"><i class="fa fa-caret-up"></i></button> 
+                    <button class="btn btn-default" type="button" data-action="num_purchased_stocks"><i class="fa fa-caret-down"></i></button> 
                   </div> 
                 </div>
               </span> 
@@ -458,8 +477,8 @@ input[type="number"] { width: 40px; }
                 <div class="input-group spinner"> 
                   <input type="text" class="form-control" value="0" > 
                   <div class="input-group-btn-vertical"> 
-                    <button class="btn btn-default" type="button" data-action="purchase_price"><i class="fa fa-caret-up"></i></a> 
-                    <button class="btn btn-default" type="button" data-action="purchase_price"><i class="fa fa-caret-down"></i></a> 
+                    <button class="btn btn-default" type="button" data-action="purchase_price"><i class="fa fa-caret-up"></i></button> 
+                    <button class="btn btn-default" type="button" data-action="purchase_price"><i class="fa fa-caret-down"></i></button> 
                   </div> 
                 </div>
               </span> 
@@ -492,8 +511,8 @@ input[type="number"] { width: 40px; }
             <div class="input-group spinner"> 
               <input type="text" class="form-control" value="0" id="rr_income" > 
               <div class="input-group-btn-vertical"> 
-                <button class="btn btn-default" type="button" data-action="rr_income"><i class="fa fa-caret-up"></i></a> 
-                <button class="btn btn-default" type="button" data-action="rr_income"><i class="fa fa-caret-down"></i></a> 
+                <button class="btn btn-default" type="button" data-action="rr_income"><i class="fa fa-caret-up"></i></button> 
+                <button class="btn btn-default" type="button" data-action="rr_income"><i class="fa fa-caret-down"></i></button> 
               </div> 
             </div>
           </span>
@@ -547,6 +566,10 @@ input[type="number"] { width: 40px; }
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
+
+
+
+
 
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" crossorigin="anonymous"></script>
