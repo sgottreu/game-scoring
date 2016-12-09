@@ -1,8 +1,8 @@
   var socket = io();
   var game_name = 'continental_divide';
   var game_oid;
-  var user = localStorage.getItem("game-scoring--username"); 
-  var userFullname = localStorage.getItem("game-scoring--fullname"); 
+  var user = localStorage.getItem("game-scoring--username");
+  var userFullname = localStorage.getItem("game-scoring--fullname");
   var user_treasury = 0;
   var companies = ['blue','red', 'yellow', 'pink', 'green', 'purple', 'brown', 'black'];
 
@@ -13,10 +13,11 @@
   var nsp_socket;
 
 $( document ).ready(function() {
-  socket.emit('available_games', {name: game_name});
+  
 
   if(user !== undefined && user !== null && user != ''){
-    $("#username").val(userFullname);
+    $("#name").val(userFullname);
+    $("#username").val(user);
   }
 
   /**** Navigation Tab Events ******/
@@ -66,30 +67,33 @@ $( document ).ready(function() {
         alert_msg('modal-body', 'Please enter your username, game preference && number of players.');
       } else {
         var username = $("#username").val();
-        username = username.replace(/[^a-z0-9]/gi, '_').toLowerCase(),
+        username = username.toLowerCase(),
 
         localStorage.setItem("game-scoring--username", username );
-        localStorage.setItem("game-scoring--fullname", $("#username").val() );
+        localStorage.setItem("game-scoring--fullname", $("#name").val() );
+
+        var current_location = JSON.parse(localStorage.getItem("game-scoring--current_location"));
 
         var action = (_id == 'new') ? 'add_game_instance' : 'join_game_instance';
 
-        socket.emit('save_username', {tag: username, name: $("#username").val() });
+        socket.emit('save_username', {tag: username, name: $("#name").val(), location: current_location });
 
         setUserRoom();
-        
-        socket.emit(action, 
-          { game: { 
-              name: game_name, 
+
+        socket.emit(action,
+          { game: {
+              name: game_name,
               _id: $('.available_games_dd .dropdown.selected a').data('oid'),
-              num_players: $('.num_players .dropdown.selected a').data('numplayers')
+              num_players: $('.num_players .dropdown.selected a').data('numplayers'),
+              location: current_location
             },
-            user: {tag: username, name: $("#username").val() }
+            user: {tag: username, name: $("#name").val(), location: current_location }
           }
         );
 
         user = username;
         $('#modal--username').modal('toggle');
-      }  
+      }
   });
 
   $(".purchaseCompanyStock").click(function(){
@@ -181,7 +185,7 @@ $( document ).ready(function() {
 
   $('.available_games_dd').on('click', function(e) {
     $('.available_games_dd .dropdown').removeClass('selected');
-    
+
     if(e.originalEvent.target.id !== ''){
       $('#'+e.originalEvent.target.id).parent().addClass('selected');
 
@@ -189,7 +193,7 @@ $( document ).ready(function() {
         $("#num_players").parent().removeClass('hidden');
       } else {
         $("#num_players").parent().addClass('hidden');
-      }      
+      }
     }
 
   });
@@ -292,14 +296,14 @@ $( document ).ready(function() {
       alert_msg('modal-body', 'You do not have enough money to purchase that amount of stock.');
     }
 
-  }    
+  }
 
 
   function populateCompany(company){
     $(".company_name").text(company.name);
-    
-    $("#rr_treasury__txt").text(company.rr_treasury);  
-    $("#rr_income__txt").text(company.rr_income);  
+
+    $("#rr_treasury__txt").text(company.rr_treasury);
+    $("#rr_income__txt").text(company.rr_income);
 
     $("#stocks_issued__txt").text(company.stocks_issued);
     $("#stock_value__txt").text(company.stock_value);
@@ -398,12 +402,48 @@ $( document ).ready(function() {
     }
   }
 
+/**** GeoLocation ******/
+
+
+function greatCircleDistance(loc1, loc2) {
+  var lat1 = loc1[0], lon1 = loc1[1], lat2 = loc2[0], lon2 = loc2[1];
+  var R = 3959; // Radius of the earth in miles
+  var dLat = (lat2 - lat1) * Math.PI / 180;  // deg2rad below
+  var dLon = (lon2 - lon1) * Math.PI / 180;
+  var a =
+     0.5 - Math.cos(dLat)/2 +
+     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+     (1 - Math.cos(dLon))/2;
+
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
+
+if ("geolocation" in navigator) {
+  /* geolocation is available */
+} else {
+  /* geolocation IS NOT available */
+}
+
+navigator.geolocation.getCurrentPosition(function(position) {
+  var coords = {lat: position.coords.latitude, lon: position.coords.longitude };
+  localStorage.setItem("game-scoring--current_location", JSON.stringify(coords) );
+
+  socket.emit('available_games', {name: game_name, location: coords});
+//   var current_location = JSON.parse(localStorage.getItem("game-scoring--current_location"));
+
+// console.log(current_location);
+//   socket.emit('current_location', current_location);
+});
+
 /******** Socket IO commands *****/
 
-  socket.on('available_games', function(games){    
+  socket.on('available_games', function(games){
     var html = '<li role="presentation" class="dropdown"><a href="#" class="dropdown-toggle" id="new_instance" data-toggle="dropdown" data-oid="new" role="button" aria-haspopup="true" aria-expanded="false">+ Add New Instance</a></li>';
     for(var x=0,len=games.length;x<len;x++){
-      html += '<li role="presentation" class="dropdown"><a href="#" class="dropdown-toggle" id="'+games[x]._id+'" data-oid="'+games[x]._id+'" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">'+games[x]._id+'</a></li>';
+      html += '<li role="presentation" class="dropdown">';
+      html += '<a href="#" class="dropdown-toggle" id="'+games[x]._id+'" data-oid="'+games[x]._id+'" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">';
+      html += games[x].creator.name+' - Dist: '+games[x].distance;
+      html += '</a></li>';
     }
     $('.dropdown-menu[aria-labelledby="available_games_dd"]').html(html);
   });
@@ -418,11 +458,11 @@ $( document ).ready(function() {
 
   socket.on('get_company', function(company){
     log_actions('information about '+company.name+' requested');
-    
+
     if($('.company_pane .btn.active') && company.tag == $('.company_pane .btn.active').text().toLowerCase() ){
       $(".company_pane__fields").removeClass("hidden");
       populateCompany(company);
-    } 
+    }
   });
 
   socket.on('update_company', function(company){
@@ -485,7 +525,7 @@ $( document ).ready(function() {
         $(".purchase_price input").val(min_sv);
       }
 
-    } 
+    }
 
   });
 
@@ -496,7 +536,7 @@ $( document ).ready(function() {
   });
 
   function setUserRoom(){
-    nsp_socket = io('/'+user );
+    nsp_socket = io('/'+keyify(user) );
 
     nsp_socket.on('close_purchase_window', function(company){
       $('#modal--buyStock').modal('toggle');
@@ -521,7 +561,7 @@ $( document ).ready(function() {
         html += '<option '+selected+' value="'+players[x].tag+'">'+players[x].name+'</option>';
       }
       $(".player_name select").html(html);
-    }); 
+    });
 
     nsp_socket.on('get_player_totals', function(player){
       $('#user_treasury__txt').text(player.user_treasury);
@@ -534,7 +574,7 @@ $( document ).ready(function() {
         if (players.hasOwnProperty(user)) {
             $('#modal--player-dividend .'+players[user].tag+' .panel-body').text(players[user].dividend_payment);
         }
-      }      
+      }
     });
 
   }
@@ -545,6 +585,10 @@ function inArray(needle, haystack) {
         if(haystack[i] == needle) return true;
     }
     return false;
+}
+
+function keyify(key){
+  return key.replace(/[@\.]/g, '_');
 }
 
 function sortNumber(a,b) {

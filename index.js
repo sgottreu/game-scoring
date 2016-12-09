@@ -3,9 +3,15 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var express = require('express');
 
+// var db_config = require('./db_config');
+// var node_env = process.env.NODE_ENV.trim();
+var db_collection = "game-scoring--games";//db_config[node_env];
+
 var mongo = require('mongodb');
 var monk = require('monk');
 var moment = require('moment');
+
+var morgan = require('morgan');
 
 var mongodb_config = (process.env.mongodb) ? process.env.mongodb : process.argv[2];
 var mongo_url = 'mongodb://'+mongodb_config;
@@ -20,7 +26,7 @@ var player_amts = {
     3: 80,
     4: 60,
     5: 48,
-    6: 40 
+    6: 40
   };
 
 var port = process.env.PORT || '3000';
@@ -33,7 +39,7 @@ app.get('/', function(req, res){
 });
 
 app.get('/continental_divide', function(req, res){
-  res.sendFile(__dirname + '/continental_divide.html');
+  res.sendFile(__dirname + '/public/continental_divide.html');
 });
 
 app.get('/nautilus', function(req, res){
@@ -108,92 +114,140 @@ io.on('connection', function(socket){
     getPlayers(obj);
   });
 
+  // socket.on('current_location', function(obj){
+  //   console.log(obj.lat);
+  //   console.log(obj.lon);
+  // });
+
 });
 
 http.listen(port, function(){
   console.log('listening on *:'+port);
 });
 
-function createNamespace(user){
-  nsp_socket[user.tag] = io.of('/'+user.tag);
-  nsp_socket[user.tag].on('connection', function(socket){
-    console.log(user.tag+' connected to nsp channel: '+user.tag);
+function keyify(key){
+  return key.replace(/[@\.]/g, '_');
+}
 
+function createNamespace(user){
+
+  var np = keyify(user.tag);
+
+  nsp_socket[np] = io.of('/'+np);
+  nsp_socket[np].on('connection', function(socket){
+    console.log(user.tag+' connected to nsp channel: '+np);
   });
 }
 
 function emitAvailableGames(io, game){
-	var available_games = db.get('game-scoring--games');
+	var available_games = db.get(db_collection);
   available_games.find({ name: game.name }).then(function(docs) {
+    console.log(docs);
     for(var x=0,len=docs.length;x<len;x++){
-			docs[x] = setGameAttrib(docs[x], game._id);
+			docs[x] = setGameAttrib(docs[x], game._id, game.location);
 		}
-  	io.emit('available_games', docs); 
+    docs = getNearbyGames(docs);
+  	io.emit('available_games', docs);
   });
 }
 
+function getNearbyGames(docs){
+  docs.sort(compareDistance);
+
+  var nearby = [];
+
+  for(var x=0,len=docs.length;x<len;x++){
+    if(docs[x].distance <= 15){
+      nearby.push(docs[x]);
+    }
+  }
+  return nearby;
+}
+
+function greatCircleDistance(loc1, loc2) {
+  var lat1 = loc1[0], lon1 = loc1[1], lat2 = loc2[0], lon2 = loc2[1];
+  var R = 3959; // Radius of the earth in miles
+  var dLat = (lat2 - lat1) * Math.PI / 180;  // deg2rad below
+  var dLon = (lon2 - lon1) * Math.PI / 180;
+  var a =
+     0.5 - Math.cos(dLat)/2 +
+     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+     (1 - Math.cos(dLon))/2;
+
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
+
+function compareDistance(a,b) {
+  if (a.distance < b.distance)
+    return -1;
+  if (a.distance > b.distance)
+    return 1;
+  return 0;
+}
+
+
 function addGameInstance(io, obj){
-  var available_games = db.get('game-scoring--games');
+  var available_games = db.get(db_collection);
   var game_obj = buildGameInstance(obj);
 
   available_games.insert( game_obj).then(function (data) {
     emitAvailableGames(io, data);
     data.newest_user = obj.user;
-    io.emit('joined_game', data); 
+    io.emit('joined_game', data);
   });
 }
 
 function joinGameInstance(io, obj){
-  var available_games = db.get('game-scoring--games');
+  var available_games = db.get(db_collection);
 
   console.log('Attempting to join game');
 
   available_games.findOne({ "_id" : monk.id(obj.game._id) }).then(function(game) {
     console.log('game found');
-    if(game.users[ obj.user.tag ] === undefined){
+    if(game.users[ keyify(user.tag) ] === undefined){
       game.users = buildNewUserInstance(obj, game);
 
-      available_games.findOneAndUpdate( 
+      available_games.findOneAndUpdate(
         { "_id" : monk.id(obj.game._id) },
         game
       ).then(function(docs) {
         console.log('Joining game');
-        docs = setGameAttrib(docs, obj.game._id, obj.user);
-        io.emit('joined_game', docs); 
+        docs = setGameAttrib(docs, obj.game._id, obj.location, obj.user);
+        io.emit('joined_game', docs);
       });
     } else {
       console.log('Joining game already a part of');
-      game = setGameAttrib(game, obj.game._id, obj.user);
-      io.emit('joined_game', game); 
+      game = setGameAttrib(game, obj.game._id, obj.location, obj.user);
+      io.emit('joined_game', game);
     }
   });
 }
 
 function buildNewUserInstance(obj, game){
   var users = game.users;
-
-  users[obj.user.tag] = buildUserObj(obj.user, game.num_players);
+  var key = keyify(obj.user.tag);
+  users[key] = buildUserObj(obj.user, game.num_players);
   for(var x=0,len=companies.length;x<len;x++){
-    users[obj.user.tag].companies[ companies[x] ] = buildUserCompanyObj(companies[x]);
+    users[key].companies[ companies[x] ] = buildUserCompanyObj(companies[x]);
   }
   return users;
 }
 
 function getStockValues(obj){
-  var available_games = db.get('game-scoring--games');
+  var available_games = db.get(db_collection);
   console.log('Getting Stock Values');
   available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
     io.emit('get_stock_values', {
-      companies: game.companies, 
+      companies: game.companies,
       purchase: obj.purchase,
       user_treasury: game.users[obj.user].cash_total
-    }); 
+    });
   });
 }
 
 function getCompanyDividends(obj){
   var dividend_payment = {};
-  var available_games = db.get('game-scoring--games');
+  var available_games = db.get(db_collection);
   console.log('Getting Company Dividends');
   available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
     var curr_company;
@@ -204,12 +258,12 @@ function getCompanyDividends(obj){
         dividend_payment: calcDividendPayment(curr_company.dividend, curr_company.remaining_stock)
       };
     }
-    io.emit('get_company_dividends', dividend_payment ); 
+    io.emit('get_company_dividends', dividend_payment );
   });
 }
 
 function saveCompanyDividends(obj){
-  var available_games = db.get('game-scoring--games');
+  var available_games = db.get(db_collection);
   console.log('Saving Company Dividends');
   available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
     var cc, treasury;
@@ -222,16 +276,14 @@ function saveCompanyDividends(obj){
     available_games.update( { "_id" : monk.id(obj.game_oid) }, game )
       .then(function(upd_game){
         console.log('Company treasury updated');
-        io.emit('update_company_treasury', true ); 
+        io.emit('update_company_treasury', true );
         nsp_socket[obj.user].emit('close_company_dividend_window', true);
     });
-
-    io.emit('update_company_treasury', dividend_payment ); 
   });
 }
 
 function savePlayerDividends(obj){
-  var available_games = db.get('game-scoring--games');
+  var available_games = db.get(db_collection);
   console.log('Saving Player Dividends');
   available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
     for (var u in game.users) {
@@ -249,17 +301,21 @@ function savePlayerDividends(obj){
   });
 }
 
-function setGameAttrib(game, _id, user){
+function setGameAttrib(game, _id, location, user){
   game.date = moment(game._id.getTimestamp()).format("MM/DD/YYYY");
   game.selected = (_id !== undefined && _id.toString() == game._id.toString()) ? true : false;
   if(user !== undefined){
     game.newest_user = user.tag;
   }
+  var game_loc = game.location;
+
+  game.distance = greatCircleDistance([location.lat, location.lon], [game_loc.lat, game_loc.lon]);
+  game.distance = Math.round((game.distance + 0.00001) * 1000) / 1000;
   return game;
 }
 
 function getPlayers(obj){
-  var available_games = db.get('game-scoring--games');
+  var available_games = db.get(db_collection);
   console.log('Getting Players');
   available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
     var players = [];
@@ -274,16 +330,16 @@ function getPlayers(obj){
 }
 
 function getCompanyInfo(obj){
-  var available_games = db.get('game-scoring--games');
+  var available_games = db.get(db_collection);
   console.log('Getting company');
 
   available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
-    io.emit('get_company', game.companies[obj.company_name]); 
+    io.emit('get_company', game.companies[obj.company_name]);
   });
 }
 
 function purchaseTransaction(obj){
-  var avail_game = db.get('game-scoring--games');
+  var avail_game = db.get(db_collection);
   console.log('updating company');
 
   avail_game.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(db_game) {
@@ -293,7 +349,7 @@ function purchaseTransaction(obj){
     db_game.users[obj.user] = userTransaction(obj, db_game);
 
     avail_game.update(
-      { "_id" : monk.id(obj.game_oid) }, 
+      { "_id" : monk.id(obj.game_oid) },
       db_game )
     .then(function(game){
       console.log('Company updated');
@@ -305,7 +361,7 @@ function purchaseTransaction(obj){
 }
 
 function updateRailroadIncome(obj){
-  var avail_game = db.get('game-scoring--games');
+  var avail_game = db.get(db_collection);
   console.log('updating income');
 
   avail_game.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(db_game) {
@@ -313,7 +369,7 @@ function updateRailroadIncome(obj){
     db_game.companies[ obj.company.tag ] = calcCompanyValues(obj, db_game);
 
     avail_game.update(
-      { "_id" : monk.id(obj.game_oid) }, 
+      { "_id" : monk.id(obj.game_oid) },
       db_game )
     .then(function(game){
       console.log('Company updated');
@@ -321,11 +377,11 @@ function updateRailroadIncome(obj){
 
       nsp_socket[obj.user].emit('close_income_window', true);
     });
-  }); 
+  });
 }
 
 function getPlayerTotals(obj){
-  var avail_game = db.get('game-scoring--games');
+  var avail_game = db.get(db_collection);
   console.log('get player totals');
 
   avail_game.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(db_game) {
@@ -335,11 +391,11 @@ function getPlayerTotals(obj){
 
     nsp_socket[obj.user].emit('get_player_totals', totals);
 
-  }); 
+  });
 }
 
 function getPlayerDividends(obj){
-  var avail_game = db.get('game-scoring--games');
+  var avail_game = db.get(db_collection);
   console.log('get player dividends');
 
   avail_game.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(db_game) {
@@ -356,7 +412,7 @@ function getPlayerDividends(obj){
 
     nsp_socket[obj.user].emit('get_player_dividends', users);
 
-  }); 
+  });
 }
 
   function calcDividend(stocks_issued, rr_income){
@@ -391,7 +447,7 @@ function getPlayerDividends(obj){
       c = companies[x];
       dividend_payment = dividend_payment + (railroads[c].dividend * player_companies[c].stocks_owned)
     }
-    
+
     totals.dividend_payment = dividend_payment;
 
     return (onlyDividend) ? totals.dividend_payment : totals;
@@ -399,20 +455,22 @@ function getPlayerDividends(obj){
 
 function buildGameInstance(obj){
   var comp, user = {};
-
-  user[obj.user.tag] = buildUserObj(obj.user, obj.game.num_players);
+  key = keyify(obj.user.tag);
+  user[key] = buildUserObj(obj.user, obj.game.num_players);
 
   var game_obj = {
-    name: obj.game.name, 
+    name: obj.game.name,
     users: user,
+    location: obj.game.location,
     num_players: obj.game.num_players,
-    companies: {}
+    companies: {},
+    creator: obj.user
   };
 
   for(var x=0,len=companies.length;x<len;x++){
     comp = companies[x];
     game_obj.companies[ comp ] = buildCompanyObj(comp);
-    game_obj.users[obj.user.tag].companies[ comp ] = buildUserCompanyObj(comp);
+    game_obj.users[key].companies[ comp ] = buildUserCompanyObj(comp);
   }
 
   return game_obj;
@@ -435,6 +493,14 @@ function buildCompanyObj(comp){
 }
 
 function buildUserObj(user, num_players){
+  if(typeof user !== 'object' || user.name === undefined || user.tag === undefined ){
+    return false;
+  }
+
+  if(isNaN(num_players) || parseInt(num_players) < 3 || parseInt(num_players) > 6){
+    return false;
+  }
+
   return {
     name: user.name,
     tag: user.tag,
@@ -459,10 +525,10 @@ function calcCompanyValues(obj, db_game){
   tag.rr_income = obj.company.rr_income;
 
   if(obj.num_purchased_stocks !== undefined){
-    tag.remaining_stock = tag.remaining_stock - obj.num_purchased_stocks;  
+    tag.remaining_stock = tag.remaining_stock - obj.num_purchased_stocks;
     tag.rr_treasury = tag.rr_treasury + obj.purchase_price;
   }
-  
+
   if(obj.action == 'init_company'){
 
     tag.stocks_issued = obj.company.stocks_issued;
@@ -475,7 +541,7 @@ function calcCompanyValues(obj, db_game){
 
   tag.dividend    = calcDividend(tag.stocks_issued, tag.rr_income);
   tag.stock_price = calcStockPrice(tag.stock_value, tag.dividend);
-  
+
   return tag;
 }
 
@@ -501,3 +567,6 @@ function inArray(needle, haystack) {
     return false;
 }
 
+exports.app = app; // for testing
+
+exports.buildUserObj = buildUserObj;
