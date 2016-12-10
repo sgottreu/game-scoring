@@ -163,7 +163,7 @@ function getNearbyGames(docs, game){
   var nearby = [], _id = game.game_oid;
 
   for(var x=0,len=docs.length;x<len;x++){
-    if(docs[x].distance <= 20){
+    if(docs[x].distance <= 20 && docs[x].distance > -1){
       nearby.push(docs[x]);
     } else {
       if(_id !== undefined){
@@ -323,8 +323,12 @@ function setGameAttrib(game, _id, location, user){
 
   var game_loc = game.location;
 
-  game.distance = greatCircleDistance([location.lat, location.lon], [game_loc.lat, game_loc.lon]);
-  game.distance = Math.round((game.distance + 0.00001) * 1000) / 1000;
+  if(location !== null){
+    game.distance = greatCircleDistance([location.lat, location.lon], [game_loc.lat, game_loc.lon]);
+    game.distance = Math.round((game.distance + 0.00001) * 1000) / 1000;
+  } else {
+    game.distance = -1;
+  }
 
   return game;
 }
