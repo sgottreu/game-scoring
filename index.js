@@ -14,7 +14,6 @@ var morgan = require('morgan');
 
 var mongodb_config = (process.env.mongodb) ? process.env.mongodb : process.argv[2];
 var mongo_url = 'mongodb://'+mongodb_config;
-
 var db = monk(mongo_url);
 
 var nsp_socket = [];
@@ -63,6 +62,7 @@ app.get('/game/:game_id', function(req, res){
 
 io.on('connection', function(socket){
   console.log('client connected');
+  var clientIp = socket.request.connection._peername.address;
 
   socket.on('disconnect', function(){
     console.log('client disconnected');
@@ -151,22 +151,24 @@ function emitAvailableGames(io, game){
     for(var x=0,len=docs.length;x<len;x++){
 			docs[x] = setGameAttrib(docs[x], game._id, game.location);
 		}
-    docs = getNearbyGames(docs, game.game_oid);
+    docs = getNearbyGames(docs, game);
+
   	io.emit('available_games', docs);
   });
 }
 
-function getNearbyGames(docs, game_oid){
+function getNearbyGames(docs, game){
   docs.sort(compareDistance);
 
-  var nearby = [];
+  var nearby = [], _id = game.game_oid;
 
   for(var x=0,len=docs.length;x<len;x++){
-    if(docs[x].distance <= 15){
+    if(docs[x].distance <= 20){
       nearby.push(docs[x]);
     } else {
-      if(game_oid !== undefined){
-        if(game_oid == docs[x]._id){
+      if(_id !== undefined){
+        if(_id == docs[x]._id){
+          docs[x].distance = 'N/A';
           nearby.push(docs[x]);
         }
       }
