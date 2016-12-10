@@ -248,11 +248,6 @@ $( document ).ready(function() {
     }
 
     $(".game_link_txt").val(url);
-    // $('.game_link_txt').focus();
-
-    // setTimeout(function () { 
-    //   $('.game_link_txt').select(); 
-    // }, 100); 
 
     $(document).on('focus', '.game_link_txt', function () {
       if (focusedElement == this) return; //already focused, return so user can now place cursor at specific point in input.
@@ -535,6 +530,7 @@ function geoLocationError(err){
   });
 
   socket.on('joined_game', function(msg){
+    console.log(msg);
     game_oid = msg._id;
     user_treasury = msg.users[ msg.newest_user ].cash_total;
     log_actions(msg.newest_user+' has joined the game');
@@ -647,6 +643,8 @@ function geoLocationError(err){
         html += '<option '+selected+' value="'+players[x].tag+'">'+players[x].name+'</option>';
       }
       $(".player_name select").html(html);
+
+      $('.player_name select').val(user);
     });
 
     nsp_socket.on('get_player_totals', function(player){

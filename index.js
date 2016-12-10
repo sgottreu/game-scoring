@@ -69,6 +69,7 @@ io.on('connection', function(socket){
   });
 
   socket.on('add_game_instance', function(obj){
+    console.log('add_game_instance');
     addGameInstance(io, obj);
   });
 
@@ -205,7 +206,7 @@ function addGameInstance(io, obj){
 
   available_games.insert( game_obj).then(function (data) {
     emitAvailableGames(io, data);
-    data.newest_user = keyify(obj.user);
+    data.newest_user = keyify(obj.user.tag);
     io.emit('joined_game', data);
   });
 }
@@ -343,8 +344,6 @@ function getPlayers(obj){
         players.push({name: game.users[u].name, tag: keyify(game.users[u].tag) });
       }
     }
-console.log(obj.client);
-console.log(players);
     nsp_socket[obj.client].emit('get_players', players);
 
   });
