@@ -323,7 +323,7 @@ function setGameAttrib(game, _id, location, user){
 
   var game_loc = game.location;
 
-  if(location !== null){
+  if(location !== null && game_loc !== null){
     game.distance = greatCircleDistance([location.lat, location.lon], [game_loc.lat, game_loc.lon]);
     game.distance = Math.round((game.distance + 0.00001) * 1000) / 1000;
   } else {
