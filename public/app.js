@@ -485,6 +485,10 @@ function greatCircleDistance(loc1, loc2) {
   return R * 2 * Math.asin(Math.sqrt(a));
 }
 
+if(getQueryVariable('game_id')){
+  game_oid = getQueryVariable('game_id');
+}
+
 if ("geolocation" in navigator) {
   /* geolocation is available */
 } else {
@@ -492,21 +496,24 @@ if ("geolocation" in navigator) {
   socket.emit('available_games', {name: game_name, location: {lat: 0, lon: 0 }, game_oid: game_oid});
 }
 
+var geo_options = {
+  enableHighAccuracy: false,
+  timeout: 5000,
+  maximumAge: Infinity
+};
+
 navigator.geolocation.getCurrentPosition(
   function(position) {
     var coords = {lat: position.coords.latitude, lon: position.coords.longitude };
     localStorage.setItem("game-scoring--current_location", JSON.stringify(coords) );
 
-    if(getQueryVariable('game_id')){
-      game_oid = getQueryVariable('game_id');
-    }
-
     socket.emit('available_games', {name: game_name, location: coords, game_oid: game_oid});
-  }, function(){
-    socket.emit('available_games', {name: game_name, location: {lat: 0, lon: 0 }, game_oid: game_oid});
-    error('Location services must be enabled to use this');
-  }, { timeout: 3000 }
+  }, geoLocationError, geo_options
 );
+
+function geoLocationError(err){
+  socket.emit('available_games', {name: game_name, location: {lat: 0, lon: 0 }, game_oid: game_oid});
+}
 
 /******** Socket IO commands *****/
 

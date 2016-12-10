@@ -156,6 +156,14 @@ input[type="number"] { width: 40px; }
 #modal--income h5, #modal--buyStock h5 {text-transform:capitalize;}
 #modal--company-dividend .panel-primary {text-transform:capitalize;}
 
+
+@media (max-width: 370px) {
+  .btn-toolbar.company_pane .btn-group {
+    width: 200px;
+    margin: 10px auto;
+  }
+}
+
 </style>
 
  <h2>Continental Divide</h2>
@@ -214,12 +222,12 @@ input[type="number"] { width: 40px; }
 
 
   <div class="row company_pane__fields hidden">
-    <div class="col-xs-6 col-md-3"> 
+    <div class="col-xs-12 col-sm-6 col-md-3"> 
       <button type="button" class="btn btn-primary purchaseCompanyStock hidden" autocomplete="off"> 
           Purchase Stock 
         </button> 
     </div>
-    <div class="col-xs-6 col-md-3"> 
+    <div class="col-xs-12 col-sm-6 col-md-3"> 
       <button type="button" class="btn btn-primary increaseCompanyIncome hidden" autocomplete="off"> 
           Increase Income 
         </button> 
@@ -234,19 +242,19 @@ input[type="number"] { width: 40px; }
   </div>
 
   <div class="row company_pane__fields hidden">
-    <div class="col-xs-6 col-md-3 hidden"> 
+    <div class="col-xs-12 col-sm-6 col-md-3 hidden"> 
       <div class="stock_value txt_val"> 
         <span>Stock Value</span> 
         <span id="stock_value__txt">0</span> 
       </div> 
     </div>
-    <div class="col-xs-6 col-md-3 hidden"> 
+    <div class="col-xs-12 col-sm-6 col-md-3 hidden"> 
       <div class="stocks_issued txt_val"> 
         <span>Stocks Issued</span> 
         <span id="stocks_issued__txt">0</span> 
       </div> 
     </div>
-    <div class="col-xs-6 col-md-3 hidden"> 
+    <div class="col-xs-12 col-sm-6 col-md-3 hidden"> 
       <div class="rr_income txt_val  "> 
         <span>RR Income</span> 
         <span id="rr_income__txt">0</span>  
@@ -255,7 +263,7 @@ input[type="number"] { width: 40px; }
 
   </div>
   <div class="row company_pane__fields hidden">
-    <div class="col-xs-6 col-md-3 "> 
+    <div class="col-xs-12 col-sm-6 col-md-3 "> 
       <div class="rr_treasury  panel panel-primary "> 
         <div class="panel-heading">
           <h3 class="panel-title">Treasury</h3>
@@ -265,7 +273,7 @@ input[type="number"] { width: 40px; }
         </div>
       </div> 
     </div>
-    <div class="col-xs-6 col-md-3"> 
+    <div class="col-xs-12 col-sm-6 col-md-3"> 
       <div class="stock_price panel panel-primary"> 
         <div class="panel-heading">
           <h3 class="panel-title">Stock Price</h3>
@@ -275,7 +283,7 @@ input[type="number"] { width: 40px; }
         </div>
       </div> 
     </div>
-    <div class="col-xs-6 col-md-3"> 
+    <div class="col-xs-12 col-sm-6 col-md-3"> 
       <div class="dividend panel panel-primary"> 
         <div class="panel-heading">
           <h3 class="panel-title">Dividend</h3>
@@ -286,7 +294,7 @@ input[type="number"] { width: 40px; }
       </div> 
     </div>
 
-    <div class="col-xs-6 col-md-3"> 
+    <div class="col-xs-12 col-sm-6 col-md-3"> 
       <div class="dividend_payment panel panel-primary"> 
         <div class="panel-heading">
           <h3 class="panel-title">Div Pmt</h3>
@@ -297,7 +305,7 @@ input[type="number"] { width: 40px; }
       </div>
     </div>
 
-    <div class="col-xs-6 col-md-3"> 
+    <div class="col-xs-12 col-sm-6 col-md-3"> 
       <div class="remaining_stock panel panel-primary"> 
         <div class="panel-heading">
           <h3 class="panel-title">Stock Available</h3>
@@ -314,7 +322,7 @@ input[type="number"] { width: 40px; }
 
 <div role="tabpanel" class="tab-pane" id="player_block">
   <div class="row">
-    <div class="col-xs-6 col-md-3"> 
+    <div class="col-xs-12 col-sm-6 col-md-3"> 
       <div class="user_treasury panel panel-primary"> 
         <div class="panel-heading">
           <h3 class="panel-title">Treasury</h3>
@@ -325,7 +333,7 @@ input[type="number"] { width: 40px; }
       </div>
     </div>
 
-    <div class="col-xs-6 col-md-3"> 
+    <div class="col-xs-12 col-sm-6 col-md-3"> 
       <div class="player_dividend panel panel-primary"> 
         <div class="panel-heading">
           <h3 class="panel-title">Dividend Payment</h3>
@@ -341,12 +349,12 @@ input[type="number"] { width: 40px; }
 
 <div role="tabpanel" class="tab-pane" id="endofround_block">
 
-  <div class="col-xs-6 col-md-3"> 
+  <div class="col-xs-12 col-sm-6 col-md-3"> 
     <button type="button" class="btn btn-primary showCompanyDividends " autocomplete="off"> 
         Company Dividends
       </button> 
   </div>
-  <div class="col-xs-6 col-md-3"> 
+  <div class="col-xs-12 col-sm-6 col-md-3"> 
     <button type="button" class="btn btn-primary showPlayerDividends " autocomplete="off"> 
       Player Dividends
     </button> 
@@ -358,7 +366,7 @@ input[type="number"] { width: 40px; }
 </div><!-- /.panel -->
 
 <div class="row">
-  <div class=".col-xs-12 .col-sm-6 .col-md-8 log">
+  <div class="col-xs-12 col-sm-6 col-md-8 log">
   </div>
 </div>
 <!-- <div class="row">
