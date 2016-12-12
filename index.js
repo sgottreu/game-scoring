@@ -251,10 +251,17 @@ function getStockValues(obj){
   var available_games = db.get(db_collection);
   console.log('Getting Stock Values');
   available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
+    var treasuries = {};
+    for (var u in game.users) {
+      if (game.users.hasOwnProperty(u)) {
+        treasuries[u] = game.users[u].cash_total;
+      }
+    }
+
     io.emit('get_stock_values', {
       companies: game.companies,
       purchase: obj.purchase,
-      user_treasury: game.users[obj.user].cash_total
+      user_treasuries: treasuries
     });
   });
 }
@@ -430,7 +437,8 @@ function getPlayerDividends(obj){
       }
     }
 
-    nsp_socket[obj.user].emit('get_player_dividends', users);
+    // nsp_socket[obj.user].emit('get_player_dividends', users);
+    io.emit('get_player_dividends', users);
 
   });
 }

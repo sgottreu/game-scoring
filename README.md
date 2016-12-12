@@ -2,5 +2,5 @@
 
 To-Do:
 
-* Add checks for new stocks to not using existing stock values
+* Change to end of round to have confirmations before running company & player dividends.
 

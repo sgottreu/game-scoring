@@ -4,8 +4,11 @@
   var user = localStorage.getItem("game-scoring--username");
   var email = localStorage.getItem("game-scoring--email");
   var userFullname = localStorage.getItem("game-scoring--fullname");
-  var user_treasury = 0;
+  var user_treasuries = {};
   var companies = ['blue','red', 'yellow', 'pink', 'green', 'purple', 'brown', 'black'];
+
+  var stock_values = [];
+  var waiting = { get_players: false, get_stock_values: false };
 
   var current_company = false;
 
@@ -62,7 +65,14 @@ $( document ).ready(function() {
     socket.emit('get_company', { game_oid: game_oid, company_name: $(".company_pane .btn.active").text().toLowerCase() });
   });
 
-  $("#modal--username button").click(function(event){
+  $("#modal--username .modal-header button").click(function(event){
+    event.preventDefault();
+    $("#modal--username").on('hidden.bs.modal', function (e) {
+      $("#modal--username").modal('show');
+    });
+  })
+
+  $("#modal--username .modal-footer button").click(function(event){
     var _id = $('.available_games_dd .dropdown.selected a').data('oid');
     var numplayers = $('.num_players .dropdown.selected a').data('numplayers');
 
@@ -102,7 +112,9 @@ $( document ).ready(function() {
   });
 
   $(".purchaseCompanyStock").click(function(){
-    $('#modal--buyStock').modal('toggle');
+    $(this).html('Purchase Stock <i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span>')
+    waiting.get_stock_values = true;
+    waiting.get_players = true;
 
     socket.emit('get_stock_values', {
       game_oid: game_oid,
@@ -114,21 +126,22 @@ $( document ).ready(function() {
       game_oid: game_oid,
       client: user
     });
+    
 
-    confirmUserTreasury();
-
-    if(current_company.open) {
-      $("#modal--buyStock .stock_value").addClass('hidden');
-      $("#modal--buyStock .stocks_issued").addClass('hidden');
-    } else {
-      $("#modal--buyStock .stock_value").removeClass('hidden');
-      $("#modal--buyStock .stocks_issued").removeClass('hidden');
-    }
+    var checkWaiting =window.setInterval(function(){
+      if(!waiting.get_players && !waiting.get_stock_values){
+        $(".purchaseCompanyStock").html('Purchase Stock');
+        finalizePurchaseStockDialog();
+        clearInterval(checkWaiting);
+      } 
+    }, 500);
 
   });
 
   $("#modal--buyStock .modal-footer button").click(function(event){
-    if($('.purchase_price input').val() > user_treasury){
+    var player = $(".player_name select").val();
+
+    if($('.purchase_price input').val() >user_treasuries[player]){
       alert_msg('modal-body', 'You do not have enough money to purchase that amount of stock.');
     } else {
       var action = (!current_company.open) ? 'init_company': '';
@@ -154,7 +167,7 @@ $( document ).ready(function() {
 
   $(".showCompanyDividends").click(function(){
     $('#modal--company-dividend').modal('toggle');
-
+    $("#modal--company-dividend .modal-header h5").html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span> Loading Companies');
     socket.emit('get_company_dividends', { game_oid: game_oid });
   });
 
@@ -167,7 +180,7 @@ $( document ).ready(function() {
 
   $(".showPlayerDividends ").click(function(){
     $('#modal--player-dividend').modal('toggle');
-    socket.emit('get_player_dividends', { game_oid: game_oid, user: user });
+    socket.emit('get_player_dividends', { game_oid: game_oid });
   });
 
   $("#modal--player-dividend .modal-footer button").click(function(){
@@ -228,6 +241,10 @@ $( document ).ready(function() {
     createGameLink();
   });
 
+  $(".player_name select").on('change', function() {
+    confirmPlayerTreasury();
+  })
+
 });
 
   function alert_msg(klass, msg){
@@ -260,28 +277,55 @@ $( document ).ready(function() {
     $('.log').append($('<li>').text(msg));
   }
 
+  function finalizePurchaseStockDialog(){
+    $('#modal--buyStock').modal('toggle');
+    confirmPlayerTreasury();
+
+    if(current_company.open) {
+      $("#modal--buyStock .stock_value").addClass('hidden');
+      $("#modal--buyStock .stocks_issued").addClass('hidden');
+    } else {
+      $("#modal--buyStock .stock_value").removeClass('hidden');
+      $("#modal--buyStock .stocks_issued").removeClass('hidden');
+    }
+  }
+
+  function skipTakenStockValues(val,dir) {
+    if(dir == 'inc'){
+      if(val < 50){
+        val++;
+      }
+    } else {
+      if(val > 10){
+        val--;            
+      }
+    }  
+
+    if(val < 10 || val > 50){
+      return false;
+    }
+
+    if((inArray(val, stock_values)) && (val > 10 && val < 50)){
+      skipTakenStockValues(val,dir);
+    } else {
+      return val;
+    }
+  }
+
   function updateValue(spinner, action, dir) {
     var val = parseInt($(spinner).val(), 10);
 
     switch (action) {
       case "stock_value":
         var old_val = val;
-        if(dir == 'inc'){
-          if(val < 50){
-            val++;
-            $(spinner).val( val );
-          }
-        } else {
-          if(val > 10){
-            val--;
-            $(spinner).val( val );
+        val = skipTakenStockValues(val,dir);
+
+        if(val){
+          $(spinner).val( val );
+          if(old_val != val){
+            $('.purchase_price input').val( val );
           }
         }
-
-        if(old_val != val){
-          $('.purchase_price input').val( val );
-        }
-
         break;
       case "stocks_issued":
         if(dir == 'inc'){
@@ -333,9 +377,13 @@ $( document ).ready(function() {
         break;
     }
 
-    if($('.purchase_price input').val() > user_treasury){
-      alert_msg('modal-body', 'You do not have enough money to purchase that amount of stock.');
+    if(action == "stock_value"){
+      var player = $(".player_name select").val();
+      if($('.purchase_price input').val() > user_treasuries[player]){
+        alert_msg('modal-body', 'You do not have enough money to purchase that amount of stock.');
+      }
     }
+
 
   }
 
@@ -357,8 +405,9 @@ $( document ).ready(function() {
     current_company = company;
   }
 
-  function confirmUserTreasury(){
-    if(current_company.stock_price > user_treasury){
+  function confirmPlayerTreasury(){
+    var player = $(".player_name select").val();
+    if(current_company.stock_price > user_treasuries[player]){
       alert_msg('modal-body', 'You do not have enough money to purchase that amount of stock.');
     }
   }
@@ -433,6 +482,9 @@ $( document ).ready(function() {
   }
 
   function updateCompanyDividends(dividends){
+
+    $("#modal--company-dividend .modal-header h5").html('');
+
     var tag;
 
     for(var x=0,len=companies.length;x<len;x++){
@@ -467,48 +519,107 @@ $( document ).ready(function() {
 /**** GeoLocation ******/
 
 
-function greatCircleDistance(loc1, loc2) {
-  var lat1 = loc1[0], lon1 = loc1[1], lat2 = loc2[0], lon2 = loc2[1];
-  var R = 3959; // Radius of the earth in miles
-  var dLat = (lat2 - lat1) * Math.PI / 180;  // deg2rad below
-  var dLon = (lon2 - lon1) * Math.PI / 180;
-  var a =
-     0.5 - Math.cos(dLat)/2 +
-     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-     (1 - Math.cos(dLon))/2;
+  function greatCircleDistance(loc1, loc2) {
+    var lat1 = loc1[0], lon1 = loc1[1], lat2 = loc2[0], lon2 = loc2[1];
+    var R = 3959; // Radius of the earth in miles
+    var dLat = (lat2 - lat1) * Math.PI / 180;  // deg2rad below
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a =
+       0.5 - Math.cos(dLat)/2 +
+       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+       (1 - Math.cos(dLon))/2;
 
-  return R * 2 * Math.asin(Math.sqrt(a));
-}
+    return R * 2 * Math.asin(Math.sqrt(a));
+  }
 
-if(getQueryVariable('game_id')){
-  game_oid = getQueryVariable('game_id');
-}
+  if(getQueryVariable('game_id')){
+    game_oid = getQueryVariable('game_id');
+  }
 
-if ("geolocation" in navigator) {
-  /* geolocation is available */
-} else {
-  alert("GeoLocation is not available");
-  socket.emit('available_games', {name: game_name, location: {lat: 0, lon: 0 }, game_oid: game_oid});
-}
+  if ("geolocation" in navigator) {
+    /* geolocation is available */
+  } else {
+    alert("GeoLocation is not available");
+    getAvailableGames({lat: 0, lon: 0 });
+  }
 
-var geo_options = {
-  enableHighAccuracy: false,
-  timeout: 5000,
-  maximumAge: Infinity
-};
+  var geo_options = {
+    enableHighAccuracy: false,
+    timeout: 5000,
+    maximumAge: Infinity
+  };
 
-navigator.geolocation.getCurrentPosition(
-  function(position) {
-    var coords = {lat: position.coords.latitude, lon: position.coords.longitude };
-    localStorage.setItem("game-scoring--current_location", JSON.stringify(coords) );
+  navigator.geolocation.getCurrentPosition(
+    function(position) {
+      var coords = {lat: position.coords.latitude, lon: position.coords.longitude };
+      localStorage.setItem("game-scoring--current_location", JSON.stringify(coords) );
 
+      getAvailableGames(coords)
+    }, 
+    function(err) {
+      getAvailableGames({lat: 0, lon: 0 });
+    }, geo_options
+  );
+
+  function getAvailableGames(coords){
+    $("#available_games_dd").append('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span>');
     socket.emit('available_games', {name: game_name, location: coords, game_oid: game_oid});
-  }, geoLocationError, geo_options
-);
+  }
 
-function geoLocationError(err){
-  socket.emit('available_games', {name: game_name, location: {lat: 0, lon: 0 }, game_oid: game_oid});
-}
+  var setBuyStockDialog = function(obj){
+    user_treasuries = obj.user_treasuries;
+    var cv = obj.companies;
+    var company = $('.company_pane .btn.active').text().toLowerCase();
+
+
+    $("#modal--buyStock .modal-header h5").text(cv[ company ].name );
+    $("#modal--income .modal-header h5").text(cv[ company ].name );
+
+    var prv_sv = [], min_sv = 10;
+    if(obj.purchase){
+      if(cv[ company ].open){
+        $(".purchase_price input").val( cv[ company ].stock_price );
+
+        $(".num_purchased_stocks").removeClass("hidden");
+
+        $("#modal--buyStock .stock_value").addClass("hidden");
+        $("#modal--buyStock .stocks_issued").addClass("hidden");
+      } else {
+        for(var x=0,len=companies.length;x<len;x++){
+          if(cv[ companies[x] ].open && !inArray(cv[ companies[x] ].stock_value, stock_values)){
+            stock_values.push(cv[ companies[x] ].stock_value);
+          }
+        }
+        stock_values.sort(sortNumber);
+        for(var x=0,len=stock_values.length;x<len;x++){
+          if(stock_values[x] == min_sv){
+            min_sv++;
+          }
+        }
+
+        $("#modal--buyStock .stock_value").removeClass("hidden");
+        $("#modal--buyStock .stocks_issued").removeClass("hidden");
+
+        $(".stock_value input").val(min_sv);
+        $(".stocks_issued input").val(3);
+
+        $(".num_purchased_stocks").addClass("hidden");
+        $(".purchase_price input").val(min_sv);
+      }
+    }
+  };
+
+  function setPlayerDropdown(players){
+    var html = '', selected = '';
+    for(var x=0,len=players.length;x<len;x++){
+      selected = (players[x].name == user) ? 'selected' : '';
+      html += '<option '+selected+' value="'+players[x].tag+'">'+players[x].name+'</option>';
+    }
+    $(".player_name select").html(html);
+
+    $('.player_name select').val(user);
+    waiting.get_players = false;
+  }
 
 /******** Socket IO commands *****/
 
@@ -524,15 +635,16 @@ function geoLocationError(err){
     }
     $('.dropdown-menu[aria-labelledby="available_games_dd"]').html(html);
 
+    $("#available_games_dd").html(' Game Instance <span class="caret"></span>');
+
     if(game_oid !== undefined){
       preselectGameInstance(game_oid);
     }
   });
 
   socket.on('joined_game', function(msg){
-    console.log(msg);
     game_oid = msg._id;
-    user_treasury = msg.users[ msg.newest_user ].cash_total;
+    user_treasuries[msg.newest_user] = msg.users[ msg.newest_user ].cash_total;
     log_actions(msg.newest_user+' has joined the game');
 
     addPlayerDividends(msg.users);
@@ -554,6 +666,14 @@ function geoLocationError(err){
       populateCompany(company);
     }
 
+    if($("#modal--company-dividend").hasClass('in')){
+      socket.emit('get_company_dividends', { game_oid: game_oid });
+    }
+
+    if($("#modal--player-dividend").hasClass('in')){
+      socket.emit('get_player_dividends', { game_oid: game_oid, user: user });
+    }
+
     if($("li.player_block").hasClass('active')){
       socket.emit('get_player_totals', { game_oid: game_oid, user: user });
     }
@@ -568,52 +688,21 @@ function geoLocationError(err){
   });
 
   socket.on('get_stock_values', function(obj){
-    var cv = obj.companies;
-    var company = $('.company_pane .btn.active').text().toLowerCase();
-
-    user_treasury = obj.user_treasury;
-
-    $("#modal--buyStock .modal-header h5").text(cv[ company ].name );
-    $("#modal--income .modal-header h5").text(cv[ company ].name );
-
-    var prv_sv = [], min_sv = 10;
-    if(obj.purchase){
-      if(cv[ company ].open){
-        $(".purchase_price input").val( cv[ company ].stock_price );
-
-        $(".num_purchased_stocks").removeClass("hidden");
-
-        $("#modal--buyStock .stock_value").addClass("hidden");
-        $("#modal--buyStock .stocks_issued").addClass("hidden");
-      } else {
-        for(var x=0,len=companies.length;x<len;x++){
-          if(cv[ companies[x] ].open && !inArray(cv[ companies[x] ].stock_value, prv_sv)){
-            prv_sv.push(cv[ companies[x] ].stock_value);
-          }
-        }
-        prv_sv.sort(sortNumber);
-        for(var x=0,len=prv_sv.length;x<len;x++){
-          if(prv_sv[x] == min_sv){
-            min_sv++;
-          }
-        }
-        $("#modal--buyStock .stock_value").removeClass("hidden");
-        $("#modal--buyStock .stocks_issued").removeClass("hidden");
-
-        $(".stock_value input").val(min_sv);
-        $(".stocks_issued input").val(3);
-
-        $(".num_purchased_stocks").addClass("hidden");
-        $(".purchase_price input").val(min_sv);
-      }
-
-    }
-
+    setBuyStockDialog(obj);
+    waiting.get_stock_values = false;
   });
 
   socket.on('update_player_treasury', function(users){
     if($("li.player_block").hasClass('active')){
       socket.emit('get_player_totals', { game_oid: game_oid, user: user });
+    }
+  });
+
+  socket.on('get_player_dividends', function(players){
+    for (var user in players) {
+      if (players.hasOwnProperty(user)) {
+          $('#modal--player-dividend .'+players[user].tag+' .panel-body').text(players[user].dividend_payment);
+      }
     }
   });
 
@@ -637,14 +726,7 @@ function geoLocationError(err){
     });
 
     nsp_socket.on('get_players', function(players){
-      var html = '', selected = '';
-      for(var x=0,len=players.length;x<len;x++){
-        selected = (players[x].name == user) ? 'selected' : '';
-        html += '<option '+selected+' value="'+players[x].tag+'">'+players[x].name+'</option>';
-      }
-      $(".player_name select").html(html);
-
-      $('.player_name select').val(user);
+      setPlayerDropdown(players);
     });
 
     nsp_socket.on('get_player_totals', function(player){
@@ -652,14 +734,13 @@ function geoLocationError(err){
       $('#player_dividend__txt').text(player.dividend_payment);
     });
 
-    nsp_socket.on('get_player_dividends', function(players){
-      console.log(players);
-      for (var user in players) {
-        if (players.hasOwnProperty(user)) {
-            $('#modal--player-dividend .'+players[user].tag+' .panel-body').text(players[user].dividend_payment);
-        }
-      }
-    });
+    // nsp_socket.on('get_player_dividends', function(players){
+    //   for (var user in players) {
+    //     if (players.hasOwnProperty(user)) {
+    //         $('#modal--player-dividend .'+players[user].tag+' .panel-body').text(players[user].dividend_payment);
+    //     }
+    //   }
+    // });
 
   }
 
