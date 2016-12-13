@@ -11,6 +11,19 @@
   var waiting = { get_players: false, get_stock_values: false };
 
   var current_company = false;
+  var current_round = 0;
+
+  var victory_point_values = [
+    {key: 'vp_central_region', value: 1, label: 'Entered Central Region'},
+    {key: 'vp_western_region', value: 1, label: 'Western Central Region'},
+    {key: 'vp_crossed_divide', value: 2, label: 'Crossed Continental Divide'},
+    {key: 'vp_track_in_san', value: 1, label: 'Track in San Diego', city: true},
+    {key: 'vp_track_in_lax', value: 1, label: 'Track in Los Angeles', city: true},
+    {key: 'vp_track_in_pdx', value: 1, label: 'Track in Portland', city: true},
+    {key: 'vp_track_in_sea', value: 2, label: 'Track in Seattle', city: true},
+    {key: 'vp_track_in_saf', value: 1, label: 'Track in San Francisco', city: true},
+    {key: 'vp_no_stock', value: 1, label: 'No Unsold Stock'}
+  ];
 
   var connected_users = [];
 
@@ -48,21 +61,24 @@ $( document ).ready(function() {
   addCompanyDividends();
 
   $('.modal-header button').on('click', function() {
-    $(".modal-backdrop").remove();
-  });
-
-  $('.modal-footer button').on('click', function() {
-    $(".modal-backdrop").remove();
+    removeBackdrop();
   });
 
   $(".company_pane .btn").click(function(){
     $(".company_pane .btn").removeClass('active');
     $(this).toggleClass('active');
+    var company_name = $(".company_pane .btn.active").text().toLowerCase();
 
-    $(".purchaseCompanyStock").removeClass('hidden');
-    $('.increaseCompanyIncome').removeClass('hidden');
-
-    socket.emit('get_company', { game_oid: game_oid, company_name: $(".company_pane .btn.active").text().toLowerCase() });
+    if(current_round <= 8){
+      $(".purchaseCompanyStock").removeClass('hidden');
+      $('.increaseCompanyIncome').removeClass('hidden');
+      $('.decreaseCompanyCosts').removeClass('hidden');
+    } else {
+      $('.company_pane__fields.victory_points').removeClass('hidden');
+      $('.vp_company').addClass('hidden');
+      $('.vp_'+company_name).removeClass('hidden');
+    }
+    socket.emit('get_company', { game_oid: game_oid, company_name: company_name });
   });
 
   $("#modal--username .modal-header button").click(function(event){
@@ -108,6 +124,7 @@ $( document ).ready(function() {
 
         user = username;
         $('#modal--username').modal('toggle');
+        removeBackdrop();
       }
   });
 
@@ -138,6 +155,26 @@ $( document ).ready(function() {
 
   });
 
+  $(".decreaseCompanyCosts").click(function(){
+    $('#modal--costs').modal('toggle');
+    $(".rr_treasury .panel-body").text(current_company.rr_treasury);
+  });
+
+  $("#modal--costs .modal-footer button").click(function(event){
+    subtractCosts();
+  });
+
+  $(".completeGame").on('click', function(event){
+    var label;
+    for(var x=0,len=companies.length;x<len;x++){
+      for(var y=0,len2=victory_point_values.length;y<len2;y++){
+        label = victory_point_values[y].key+'_'+companies[x];
+        var val = ($('#'+label).prop('checked')) ? $('#'+label).val() : 0;
+        console.log(victory_point_values[y].key+': '+val);
+      }
+    }
+  });
+
   $("#modal--buyStock .modal-footer button").click(function(event){
     var player = $(".player_name select").val();
 
@@ -146,6 +183,7 @@ $( document ).ready(function() {
     } else {
       var action = (!current_company.open) ? 'init_company': '';
       update(action);
+      removeBackdrop();
     }
   });
 
@@ -163,6 +201,7 @@ $( document ).ready(function() {
       user: user,
       company: current_company
     });
+    removeBackdrop();
   });
 
   $(".showCompanyDividends").click(function(){
@@ -173,8 +212,7 @@ $( document ).ready(function() {
 
   $("#modal--company-dividend .modal-footer button").click(function(){
     $('#modal--company-dividend').modal('toggle');
-
-    socket.emit('update_company_treasury', { game_oid: game_oid, user: user });
+    removeBackdrop();
   });
 
 
@@ -185,11 +223,7 @@ $( document ).ready(function() {
 
   $("#modal--player-dividend .modal-footer button").click(function(){
     $('#modal--player-dividend').modal('toggle');
-    socket.emit('update_player_treasury', { game_oid: game_oid, user: user });
-  });
-
-  $("#modal--gameLink .modal-footer button").click(function(){
-    $('#modal--gameLink').modal('toggle');
+    removeBackdrop();
   });
 
   $('.modal .spinner .btn:first-of-type').on('click', function() {
@@ -243,16 +277,24 @@ $( document ).ready(function() {
 
   $(".player_name select").on('change', function() {
     confirmPlayerTreasury();
-  })
+  });
+
+  $(".completeCurrentRound").click(function(){
+    calculateEndOfRound();
+  });
 
 });
 
-  function alert_msg(klass, msg){
+  function alert_msg(klass, msg, fadeOut){
+    fadeOut = (fadeOut === undefined) ? true : fadeOut;
     $('.'+klass).prepend('<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>'+msg+'</div>');
-    $('.'+klass+' .alert').fadeTo(2000, 500).slideUp(500, function(){
-      $('.'+klass+' .alert').slideUp(500);
-      $('.'+klass+' .alert').remove();
-    });
+    if(fadeOut){
+      $('.'+klass+' .alert').fadeTo(2000, 500).slideUp(500, function(){
+        $('.'+klass+' .alert').slideUp(500);
+        $('.'+klass+' .alert').remove();
+      });
+    }
+  
   }
 
   function createGameLink(){
@@ -275,6 +317,12 @@ $( document ).ready(function() {
 
   function log_actions(msg){
     $('.log').append($('<li>').text(msg));
+  }
+
+  function calculateEndOfRound(){
+    if(current_round <= 8){
+      socket.emit('end_of_round', { game_oid: game_oid, user: user });
+    }
   }
 
   function finalizePurchaseStockDialog(){
@@ -306,7 +354,7 @@ $( document ).ready(function() {
     }
 
     if((inArray(val, stock_values)) && (val > 10 && val < 50)){
-      skipTakenStockValues(val,dir);
+      return skipTakenStockValues(val,dir);
     } else {
       return val;
     }
@@ -373,6 +421,17 @@ $( document ).ready(function() {
           }
         }
         break;
+      case "rr_costs":
+        if(dir == 'inc'){
+          if(val < current_company.rr_treasury){
+            $(spinner).val( val + 1);
+          } 
+        } else {
+          if(val > 0){
+            $(spinner).val( val - 1);
+          }
+        }
+        break;
       default:
         break;
     }
@@ -383,10 +442,21 @@ $( document ).ready(function() {
         alert_msg('modal-body', 'You do not have enough money to purchase that amount of stock.');
       }
     }
+    if(action == "rr_costs" && parseInt( $(spinner).val() ) >= current_company.rr_treasury){
+      alert_msg('modal-body', 'The company does not have enough money to pay these building costs.');
+    }
 
 
   }
 
+  function subtractCosts(){
+    socket.emit('subtract_costs', {
+      game_oid: game_oid,
+      company: current_company.tag,
+      client: user,
+      costs: $('#rr_costs').val()
+    });
+  }
 
   function populateCompany(company){
     $(".company_name").text(company.name);
@@ -401,6 +471,8 @@ $( document ).ready(function() {
     $("#dividend__txt").text(company.dividend);
     $("#dividend_payment__txt").text(company.remaining_stock * company.dividend);
     $("#remaining_stock__txt").text(company.remaining_stock);
+
+    $(".rr_treasury .panel-body").text(company.rr_treasury);
 
     current_company = company;
   }
@@ -621,9 +693,59 @@ $( document ).ready(function() {
     waiting.get_players = false;
   }
 
+  function updateRound(round){
+    current_round = round;
+    if(round <= 8){
+      $(".current_round").text(round);
+    } else {
+      $(".current_round").parent().html('End of Game');
+      victoryPointForm();
+    }
+  }
+
+  function removeBackdrop(){
+    $(".modal-backdrop").remove();
+    $('.modal-body .alert').remove();
+  }
+
+  function victoryPointForm(){
+    var html, val, disabled = false;
+    for(var x=0,len=companies.length;x<len;x++){
+      html = '<div class="col-xs-12 col-md-12 hidden vp_company vp_'+companies[x]+'">';
+
+      for(var y=0,len2=victory_point_values.length;y<len2;y++){
+        val = victory_point_values[y];
+        disabled = (val.key == 'no_stock') ? 'disabled="disabled"' : '';
+        html += '<div><input data-key="'+val.key+'" data-company="'+companies[x]+'" type="checkbox" '+disabled+' value="'+val.value+'" class="vp_chk_bx '+val.key+' '+companies[x]+'" id="'+val.key+'_'+companies[x]+'"> <label for="'+val.key+'_'+companies[x]+'">'+val.label+'</label></div>';
+      }
+      html += '</div>';
+      $(".company_pane__fields.victory_points").append(html);
+    }
+
+    $(".vp_chk_bx").on('click', function(e){
+      var vp_key, key, company, index;
+      var vp_vals = victory_point_values;
+
+      for(var y=0,len2=vp_vals.length;y<len2;y++){
+        if(victory_point_values[y].key == $(this).data('key')) {
+          key = victory_point_values[y].key;
+          company = $(this).data('company');
+          index = y;
+        }
+      }
+
+      if(vp_vals[index].city){
+        $("#vp_central_region_"+company).prop('checked', true);
+        $("#vp_western_region_"+company).prop('checked', true);
+        $("#vp_crossed_divide_"+company).prop('checked', true);
+      }
+    });
+  }
+
 /******** Socket IO commands *****/
 
   socket.on('available_games', function(games){
+    var game_found = false;
     var html = '<li role="presentation" class="dropdown"><a href="#" class="dropdown-toggle" id="new_instance" data-toggle="dropdown" data-oid="new" role="button" aria-haspopup="true" aria-expanded="false">+ Add New Instance</a></li>';
     for(var x=0,len=games.length;x<len;x++){
       html += '<li role="presentation" class="dropdown">';
@@ -631,14 +753,19 @@ $( document ).ready(function() {
       html += games[x].creator.name+' - Dist: '+games[x].distance;
       html += '</a></li>';
 
+      game_found = (game_oid !== undefined && game_oid == games[x]._id) ? true : game_found;
       log_actions(games[x].creator.name+' - Dist: '+games[x].distance);
     }
     $('.dropdown-menu[aria-labelledby="available_games_dd"]').html(html);
 
     $("#available_games_dd").html(' Game Instance <span class="caret"></span>');
 
-    if(game_oid !== undefined){
+    if(game_oid !== undefined && game_found){
       preselectGameInstance(game_oid);
+    }
+
+    if(game_oid !== undefined && !game_found){
+      alert_msg('modal-body', 'The selected game does not exist. Please select a different one.', false);
     }
   });
 
@@ -648,14 +775,22 @@ $( document ).ready(function() {
     log_actions(msg.newest_user+' has joined the game');
 
     addPlayerDividends(msg.users);
+    updateRound(msg.current_round);
   });
 
   socket.on('get_company', function(company){
     log_actions('information about '+company.name+' requested');
 
     if($('.company_pane .btn.active') && company.tag == $('.company_pane .btn.active').text().toLowerCase() ){
-      $(".company_pane__fields").removeClass("hidden");
-      populateCompany(company);
+      if(current_round <= 8){
+        $(".company_pane__fields").removeClass("hidden");
+        populateCompany(company);
+      } else {
+        if(company.remaining_stock == 0 && company.stocks_issued > 0){
+          $(".vp_no_stock."+company.tag).prop( "checked", true );
+        }
+      }
+      
     }
   });
 
@@ -683,19 +818,9 @@ $( document ).ready(function() {
     updateCompanyDividends(dividends);
   });
 
-  socket.on('update_company_treasury', function(dividends){
-    socket.emit('get_company', { game_oid: game_oid, company_name: $(".company_pane .btn.active").text().toLowerCase() });
-  });
-
   socket.on('get_stock_values', function(obj){
     setBuyStockDialog(obj);
     waiting.get_stock_values = false;
-  });
-
-  socket.on('update_player_treasury', function(users){
-    if($("li.player_block").hasClass('active')){
-      socket.emit('get_player_totals', { game_oid: game_oid, user: user });
-    }
   });
 
   socket.on('get_player_dividends', function(players){
@@ -706,6 +831,26 @@ $( document ).ready(function() {
     }
   });
 
+  socket.on('end_of_round', function(obj){
+    if($("li.player_block").hasClass('active')){
+      socket.emit('get_player_totals', { game_oid: game_oid, user: user });
+    }
+    if($(".company_pane .btn.active").length > 0){
+      socket.emit('get_company', { game_oid: game_oid, company_name: $(".company_pane .btn.active").text().toLowerCase() });
+    }
+    updateRound(obj.current_round);
+    
+    if(obj.current_round > 8){
+      $(".purchaseCompanyStock").addClass('hidden');
+      $('.increaseCompanyIncome').addClass('hidden');
+      $('.decreaseCompanyCosts').addClass('hidden');
+
+      $('.company_pane__fields').addClass('hidden');
+      $('.company_pane__fields.victory_points').removeClass('hidden');
+    }
+  });
+
+
   function setUserRoom(){
     nsp_socket = io('/'+user );
 
@@ -715,6 +860,10 @@ $( document ).ready(function() {
 
     nsp_socket.on('close_income_window', function(company){
       $('#modal--income').modal('toggle');
+    });
+
+    nsp_socket.on('close_costs_window', function(company){
+      $('#modal--costs').modal('toggle');
     });
 
     nsp_socket.on('close_company_dividend_window', function(company){
@@ -744,29 +893,29 @@ $( document ).ready(function() {
 
   }
 
-function inArray(needle, haystack) {
-    var length = haystack.length;
-    for(var i = 0; i < length; i++) {
-        if(haystack[i] == needle) return true;
-    }
-    return false;
-}
+  function inArray(needle, haystack) {
+      var length = haystack.length;
+      for(var i = 0; i < length; i++) {
+          if(haystack[i] == needle) return true;
+      }
+      return false;
+  }
 
-function keyify(key){
-  return key.replace(/[@\.]/g, '_');
-}
+  function keyify(key){
+    return key.replace(/[@\.]/g, '_');
+  }
 
-function sortNumber(a,b) {
-    return a - b;
-}
+  function sortNumber(a,b) {
+      return a - b;
+  }
 
-function getQueryVariable(variable) {
-    var query = window.location.search.substring(1);
-    var vars = query.split('&');
-    for (var i = 0; i < vars.length; i++) {
-        var pair = vars[i].split('=');
-        if (decodeURIComponent(pair[0]) == variable) {
-            return decodeURIComponent(pair[1]);
-        }
-    }
-}
+  function getQueryVariable(variable) {
+      var query = window.location.search.substring(1);
+      var vars = query.split('&');
+      for (var i = 0; i < vars.length; i++) {
+          var pair = vars[i].split('=');
+          if (decodeURIComponent(pair[0]) == variable) {
+              return decodeURIComponent(pair[1]);
+          }
+      }
+  }

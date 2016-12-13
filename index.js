@@ -102,8 +102,8 @@ io.on('connection', function(socket){
     getCompanyDividends(obj);
   });
 
-  socket.on('update_company_treasury', function(obj){
-    saveCompanyDividends(obj);
+  socket.on('subtract_costs', function(obj){
+    subtractCosts(obj);
   });
 
   socket.on('modify_railroad_income', function(obj){
@@ -118,8 +118,15 @@ io.on('connection', function(socket){
     getPlayerDividends(obj);
   });
 
-  socket.on('update_player_treasury', function(obj){
+  // socket.on('update_company_treasury', function(obj){
+  //   saveCompanyDividends(obj);
+  // });
+
+  socket.on('end_of_round', function(obj){
     savePlayerDividends(obj);
+    saveCompanyDividends(obj);
+    var round = increaseRound(obj);
+    io.emit('increase_round', round);
   });
 
   socket.on('get_players', function(obj){
@@ -134,6 +141,21 @@ http.listen(port, function(){
 
 function keyify(key){
   return key.replace(/[@\.]/g, '_');
+}
+
+function increaseRound(obj){
+  var available_games = db.get(db_collection);
+  console.log('Increasing Round');
+  available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
+    game.current_round = parseInt(game.current_round) + 1;
+
+    available_games.update( { "_id" : monk.id(obj.game_oid) }, game )
+      .then(function(upd_game){
+        console.log('Current Round: '+game.current_round);
+
+        io.emit('end_of_round', game);
+    });
+  });
 }
 
 function createNamespace(user){
@@ -290,15 +312,16 @@ function saveCompanyDividends(obj){
     var cc, treasury;
     for(var x=0,len=companies.length;x<len;x++){
       cc = game.companies[ companies[x] ];
-      treasury = game.companies[ companies[x] ].rr_treasury;
-      game.companies[ companies[x] ].rr_treasury = treasury + calcDividendPayment(cc.dividend, cc.remaining_stock);
+      cc.dividend    = calcDividend(cc.stocks_issued, cc.rr_income);
+      cc.rr_treasury = cc.rr_treasury + calcDividendPayment(cc.dividend, cc.remaining_stock);
+      game.companies[ companies[x] ] = cc;
     }
 
     available_games.update( { "_id" : monk.id(obj.game_oid) }, game )
       .then(function(upd_game){
         console.log('Company treasury updated');
         io.emit('update_company_treasury', true );
-        nsp_socket[obj.user].emit('close_company_dividend_window', true);
+        // nsp_socket[obj.user].emit('close_company_dividend_window', true);
     });
   });
 }
@@ -316,7 +339,7 @@ function savePlayerDividends(obj){
     available_games.update( { "_id" : monk.id(obj.game_oid) }, game )
       .then(function(upd_game){
         console.log('Player treasuries updated');
-        nsp_socket[obj.user].emit('close_player_dividend_window', true);
+        // nsp_socket[obj.user].emit('close_player_dividend_window', true);
         io.emit('update_player_treasury', true);
     });
   });
@@ -361,6 +384,7 @@ function getCompanyInfo(obj){
   console.log('Getting company');
 
   available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
+    console.log(obj);
     io.emit('get_company', game.companies[obj.company_name]);
   });
 }
@@ -403,6 +427,26 @@ function updateRailroadIncome(obj){
       io.emit('update_company', db_game.companies[ obj.company.tag ]);
 
       nsp_socket[obj.user].emit('close_income_window', true);
+    });
+  });
+}
+
+function subtractCosts(obj){
+  var avail_game = db.get(db_collection);
+  console.log('subtract_costs income');
+
+  avail_game.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(db_game) {
+    console.log('Found game company to update');
+    db_game.companies[ obj.company ].rr_treasury = db_game.companies[ obj.company ].rr_treasury - parseInt(obj.costs);
+
+    avail_game.update(
+      { "_id" : monk.id(obj.game_oid) },
+      db_game )
+    .then(function(game){
+      console.log('Company updated');
+      io.emit('update_company', db_game.companies[ obj.company ]);
+
+      nsp_socket[obj.client].emit('close_costs_window', true);
     });
   });
 }
@@ -464,21 +508,22 @@ function getPlayerDividends(obj){
     return so * dv ;
   }
 
-  function calcPlayerDividend(user, railroads, onlyDividend){
+  function calcPlayerDividend(user, rr, onlyDividend){
     onlyDividend = (onlyDividend === undefined) ? false : onlyDividend;
     var dividend_payment = 0;
     var totals = {user_treasury: user.cash_total, dividend_payment: 0};
-    var player_companies = user.companies;
+    // Player Companies
+    var pc = user.companies;
     var c;
 
     for(var x=0,len=companies.length;x<len;x++){
       c = companies[x];
-      dividend_payment = dividend_payment + (railroads[c].dividend * player_companies[c].stocks_owned)
+      dividend_payment = dividend_payment + (rr[c].dividend * pc[c].stocks_owned);
     }
 
     totals.dividend_payment = dividend_payment;
 
-    return (onlyDividend) ? totals.dividend_payment : totals;
+    return (onlyDividend) ? dividend_payment : totals;
   }
 
 function buildGameInstance(obj){
@@ -488,6 +533,7 @@ function buildGameInstance(obj){
 
   var game_obj = {
     name: obj.game.name,
+    current_round: 1,
     users: user,
     location: obj.user.location,
     num_players: obj.game.num_players,
