@@ -124,7 +124,7 @@ input[type="number"] { width: 40px; }
   font-size: 1.5em;
 }
 
-.purchaseCompanyStock, .increaseCompanyIncome, .showCompanyDividends, .showPlayerDividends  {
+.purchaseCompanyStock, .increaseCompanyIncome, .showCompanyDividends, .showPlayerDividends, .decreaseCompanyCosts  {
   margin: 10px 5px;
 }
 
@@ -167,6 +167,10 @@ input[type="number"] { width: 40px; }
 
 .log { display: none; }
 
+#modal--costs .rr_treasury {
+  margin-top: 15px;
+}
+
 @media (max-width: 370px) {
   .btn-toolbar.company_pane .btn-group {
     width: 200px;
@@ -178,13 +182,14 @@ input[type="number"] { width: 40px; }
 </style>
 
  <h2>Continental Divide</h2>
-
+ <h3>Current Round: <span class="current_round"></span></h3>
 <!-- Nav tabs -->
 <div class="panel with-nav-tabs panel-default">
   <div class="panel-heading">
     <ul class="nav nav-tabs" role="tablist">
       <li role="presentation" class="company_block active"><a href="#company_block" aria-controls="company_block" role="tab" data-toggle="tab"><i class="fa fa-building" aria-hidden="true"></i> Company</a></li>
       <li role="presentation" class="player_block"><a href="#player_block" aria-controls="player_block" role="tab" data-toggle="tab"><i class="fa fa-user" aria-hidden="true"></i> Player</a></li>
+      <li role="presentation" class="dividends_block"><a href="#dividends_block" aria-controls="dividends_block" role="tab" data-toggle="tab"><i class="fa fa-money" aria-hidden="true"></i> Dividends</a></li>
       <li role="presentation" class="endofround_block"><a href="#endofround_block" aria-controls="endofround_block" role="tab" data-toggle="tab"><i class="fa fa-clock-o" aria-hidden="true"></i> End of Round</a></li>
       <li role="presentation" class="game_link_block"><a href="#game_link_block" aria-controls="game_link_block" role="tab" data-toggle="tab"><i class="fa fa-share-alt" aria-hidden="true"></i> Share Game</a></li>
 
@@ -192,187 +197,208 @@ input[type="number"] { width: 40px; }
   </div>
 
 <div class="panel-body">
-<div class="tab-content">
+  <div class="tab-content">
 
-<div role="tabpanel" class="tab-pane" id="game_link_block">
-  <h4 >Share Game Instance</h4>
-  <input type="text" class="game_link_txt " >
-</div>
+    <div role="tabpanel" class="tab-pane" id="game_link_block">
+      <h4 >Share Game Instance</h4>
+      <input type="text" class="game_link_txt " >
+    </div>
 
-<div role="tabpanel" class="tab-pane active" id="company_block">
-    
-  <div class="btn-toolbar company_pane" role="toolbar" aria-label="...">
-    <div class="btn-group btn-group-lg" role="group" aria-label="...">
-      <button class="btn blue ">Blue</button>
-    </div>
-    <div class="btn-group btn-group-lg" role="group" aria-label="...">
-      <button class="btn red ">Red</button>
-    </div>
-    <div class="btn-group btn-group-lg" role="group" aria-label="...">
-      <button class="btn yellow ">Yellow</button>
-    </div>
-    <div class="btn-group btn-group-lg" role="group" aria-label="...">
-      <button class="btn pink ">Pink</button>
-    </div>
-  </div>
-  <div class="btn-toolbar company_pane" role="toolbar" aria-label="...">
-    <div class="btn-group btn-group-lg" role="group" aria-label="...">
-      <button class="btn green ">Green</button>    
-    </div>
-    <div class="btn-group btn-group-lg" role="group" aria-label="...">
-      <button class="btn purple ">Purple</button>
-    </div>
-    <div class="btn-group btn-group-lg" role="group" aria-label="...">
-      <button class="btn brown ">Brown</button>
-    </div>
-    <div class="btn-group btn-group-lg" role="group" aria-label="...">
-      <button class="btn black ">Black</button>
-    </div>
-  </div>
+    <div role="tabpanel" class="tab-pane active" id="company_block">
+        
+      <div class="btn-toolbar company_pane" role="toolbar" aria-label="...">
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn blue ">Blue</button>
+        </div>
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn red ">Red</button>
+        </div>
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn yellow ">Yellow</button>
+        </div>
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn pink ">Pink</button>
+        </div>
+      </div>
+      <div class="btn-toolbar company_pane" role="toolbar" aria-label="...">
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn green ">Green</button>    
+        </div>
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn purple ">Purple</button>
+        </div>
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn brown ">Brown</button>
+        </div>
+        <div class="btn-group btn-group-lg" role="group" aria-label="...">
+          <button class="btn black ">Black</button>
+        </div>
+      </div>
 
 
 
-  <div class="row company_pane__fields hidden">
-    <div class="col-xs-12 col-sm-6 col-md-3"> 
-      <button type="button" class="btn btn-primary purchaseCompanyStock hidden" autocomplete="off"> 
-          Purchase Stock 
+      <div class="row company_pane__fields hidden">
+        <div class="col-xs-12 col-sm-4 col-md-3"> 
+          <button type="button" class="btn btn-primary purchaseCompanyStock hidden" autocomplete="off"> 
+            Purchase Stock
+          </button> 
+        </div>
+        <div class="col-xs-12 col-sm-4 col-md-3"> 
+          <button type="button" class="btn btn-primary increaseCompanyIncome hidden" autocomplete="off"> 
+            Increase Income
+          </button> 
+        </div>
+        <div class="col-xs-12 col-sm-4 col-md-3"> 
+          <button type="button" class="btn btn-primary decreaseCompanyCosts hidden" autocomplete="off"> 
+            Subtract Building Costs
+          </button> 
+        </div>
+      </div>
+
+      <div class="row company_pane__fields hidden company_pane--company_name">
+        <div class="col-xs-12 col-md-12">
+          <h3 class="company_name">Company</h3>
+        </div>
+      </div>
+
+      <div class="row company_pane__fields hidden">
+        <div class="col-xs-12 col-sm-6 col-md-3 hidden"> 
+          <div class="stock_value txt_val"> 
+            <span>Stock Value</span> 
+            <span id="stock_value__txt">0</span> 
+          </div> 
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-3 hidden"> 
+          <div class="stocks_issued txt_val"> 
+            <span>Stocks Issued</span> 
+            <span id="stocks_issued__txt">0</span> 
+          </div> 
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-3 hidden"> 
+          <div class="rr_income txt_val  "> 
+            <span>RR Income</span> 
+            <span id="rr_income__txt">0</span>  
+          </div> 
+        </div>
+
+      </div>
+      <div class="row company_pane__fields hidden">
+        <div class="col-xs-12 col-sm-6 col-md-3 "> 
+          <div class="rr_treasury  panel panel-primary "> 
+            <div class="panel-heading">
+              <h3 class="panel-title">Treasury</h3>
+            </div>
+            <div class="panel-body" id="rr_treasury__txt">
+              0
+            </div>
+          </div> 
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-3"> 
+          <div class="stock_price panel panel-primary"> 
+            <div class="panel-heading">
+              <h3 class="panel-title">Stock Price</h3>
+            </div>
+            <div class="panel-body" id="stock_price__txt">
+              0
+            </div>
+          </div> 
+        </div>
+        <div class="col-xs-12 col-sm-6 col-md-3"> 
+          <div class="dividend panel panel-primary"> 
+            <div class="panel-heading">
+              <h3 class="panel-title">Dividend</h3>
+            </div>
+            <div class="panel-body" id="dividend__txt">
+              0
+            </div> 
+          </div> 
+        </div>
+
+        <div class="col-xs-12 col-sm-6 col-md-3"> 
+          <div class="dividend_payment panel panel-primary"> 
+            <div class="panel-heading">
+              <h3 class="panel-title">Div Pmt</h3>
+            </div>
+            <div class="panel-body" id="dividend_payment__txt">
+              0
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xs-12 col-sm-6 col-md-3"> 
+          <div class="remaining_stock panel panel-primary"> 
+            <div class="panel-heading">
+              <h3 class="panel-title">Stock Available</h3>
+            </div>
+            <div class="panel-body" id="remaining_stock__txt">
+              0
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="row company_pane__fields hidden victory_points">
+      </div>
+
+    </div><!-- /#company_block -->
+
+    <div role="tabpanel" class="tab-pane" id="player_block">
+      <div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-3"> 
+          <div class="user_treasury panel panel-primary"> 
+            <div class="panel-heading">
+              <h3 class="panel-title">Treasury</h3>
+            </div>
+            <div class="panel-body" id="user_treasury__txt">
+              0
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xs-12 col-sm-6 col-md-3"> 
+          <div class="player_dividend panel panel-primary"> 
+            <div class="panel-heading">
+              <h3 class="panel-title">Dividend Payment</h3>
+            </div>
+            <div class="panel-body" id="player_dividend__txt">
+              0
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /#player_block -->
+
+
+    <div role="tabpanel" class="tab-pane" id="dividends_block">
+
+      <div class="col-xs-12 col-sm-6 col-md-3"> 
+        <button type="button" class="btn btn-primary showCompanyDividends " autocomplete="off"> 
+            Company Dividends
+          </button> 
+      </div>
+      <div class="col-xs-12 col-sm-6 col-md-3"> 
+        <button type="button" class="btn btn-primary showPlayerDividends " autocomplete="off"> 
+          Player Dividends
         </button> 
-    </div>
-    <div class="col-xs-12 col-sm-6 col-md-3"> 
-      <button type="button" class="btn btn-primary increaseCompanyIncome hidden" autocomplete="off"> 
-          Increase Income 
+      </div>
+    </div><!-- /#dividends_block -->
+
+    <div role="tabpanel" class="tab-pane" id="endofround_block">
+
+      <div class="col-xs-12 col-sm-6 col-md-3"> 
+        <button type="button" class="btn btn-primary completeCurrentRound " autocomplete="off"> 
+            Complete Current Round
         </button> 
-    </div>
-
-  </div>
-
-  <div class="row company_pane__fields hidden">
-    <div class="col-xs-12 col-md-12">
-      <h3 class="company_name">Company</h3>
-    </div>
-  </div>
-
-  <div class="row company_pane__fields hidden">
-    <div class="col-xs-12 col-sm-6 col-md-3 hidden"> 
-      <div class="stock_value txt_val"> 
-        <span>Stock Value</span> 
-        <span id="stock_value__txt">0</span> 
-      </div> 
-    </div>
-    <div class="col-xs-12 col-sm-6 col-md-3 hidden"> 
-      <div class="stocks_issued txt_val"> 
-        <span>Stocks Issued</span> 
-        <span id="stocks_issued__txt">0</span> 
-      </div> 
-    </div>
-    <div class="col-xs-12 col-sm-6 col-md-3 hidden"> 
-      <div class="rr_income txt_val  "> 
-        <span>RR Income</span> 
-        <span id="rr_income__txt">0</span>  
-      </div> 
-    </div>
-
-  </div>
-  <div class="row company_pane__fields hidden">
-    <div class="col-xs-12 col-sm-6 col-md-3 "> 
-      <div class="rr_treasury  panel panel-primary "> 
-        <div class="panel-heading">
-          <h3 class="panel-title">Treasury</h3>
-        </div>
-        <div class="panel-body" id="rr_treasury__txt">
-          0
-        </div>
-      </div> 
-    </div>
-    <div class="col-xs-12 col-sm-6 col-md-3"> 
-      <div class="stock_price panel panel-primary"> 
-        <div class="panel-heading">
-          <h3 class="panel-title">Stock Price</h3>
-        </div>
-        <div class="panel-body" id="stock_price__txt">
-          0
-        </div>
-      </div> 
-    </div>
-    <div class="col-xs-12 col-sm-6 col-md-3"> 
-      <div class="dividend panel panel-primary"> 
-        <div class="panel-heading">
-          <h3 class="panel-title">Dividend</h3>
-        </div>
-        <div class="panel-body" id="dividend__txt">
-          0
-        </div> 
-      </div> 
-    </div>
-
-    <div class="col-xs-12 col-sm-6 col-md-3"> 
-      <div class="dividend_payment panel panel-primary"> 
-        <div class="panel-heading">
-          <h3 class="panel-title">Div Pmt</h3>
-        </div>
-        <div class="panel-body" id="dividend_payment__txt">
-          0
-        </div>
       </div>
-    </div>
-
-    <div class="col-xs-12 col-sm-6 col-md-3"> 
-      <div class="remaining_stock panel panel-primary"> 
-        <div class="panel-heading">
-          <h3 class="panel-title">Stock Available</h3>
-        </div>
-        <div class="panel-body" id="remaining_stock__txt">
-          0
-        </div>
+      <div class="col-xs-12 col-sm-6 col-md-3"> 
+        <button type="button" class="btn btn-primary completeGame " autocomplete="off"> 
+            Complete Game
+        </button> 
       </div>
-    </div>
+    </div><!-- /#endofround_block -->
 
-  </div>
-
-</div><!-- /#company_block -->
-
-<div role="tabpanel" class="tab-pane" id="player_block">
-  <div class="row">
-    <div class="col-xs-12 col-sm-6 col-md-3"> 
-      <div class="user_treasury panel panel-primary"> 
-        <div class="panel-heading">
-          <h3 class="panel-title">Treasury</h3>
-        </div>
-        <div class="panel-body" id="user_treasury__txt">
-          0
-        </div>
-      </div>
-    </div>
-
-    <div class="col-xs-12 col-sm-6 col-md-3"> 
-      <div class="player_dividend panel panel-primary"> 
-        <div class="panel-heading">
-          <h3 class="panel-title">Dividend Payment</h3>
-        </div>
-        <div class="panel-body" id="player_dividend__txt">
-          0
-        </div>
-      </div>
-    </div>
-  </div>
-</div><!-- /#player_block -->
-
-
-<div role="tabpanel" class="tab-pane" id="endofround_block">
-
-  <div class="col-xs-12 col-sm-6 col-md-3"> 
-    <button type="button" class="btn btn-primary showCompanyDividends " autocomplete="off"> 
-        Company Dividends
-      </button> 
-  </div>
-  <div class="col-xs-12 col-sm-6 col-md-3"> 
-    <button type="button" class="btn btn-primary showPlayerDividends " autocomplete="off"> 
-      Player Dividends
-    </button> 
-  </div>
-</div><!-- /#endofround_block -->
-
-</div><!-- /.panel-body -->
+  </div><!-- /.panel-body -->
 </div>
 </div><!-- /.panel -->
 
@@ -546,6 +572,52 @@ input[type="number"] { width: 40px; }
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
 
+<div class="modal fade" tabindex="-1" role="dialog" id="modal--costs">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Enter company building costs</h4>
+        <h5></h5>
+      </div>
+      <div class="modal-body">
+        <div class="row ">
+          <div class="col-xs-6 col-md-4">
+            <div class="rr_costs "> 
+              <span class="">Building Costs: </span> 
+              <span>
+                <div class="input-group spinner"> 
+                  <input type="text" class="form-control" value="0" id="rr_costs" > 
+                  <div class="input-group-btn-vertical"> 
+                    <button class="btn btn-default" type="button" data-action="rr_costs"><i class="fa fa-caret-up"></i></button> 
+                    <button class="btn btn-default" type="button" data-action="rr_costs"><i class="fa fa-caret-down"></i></button> 
+                  </div> 
+                </div>
+              </span>
+            </div> 
+          </div>
+        </div>
+        <div class="row ">
+          <div class="col-xs-6 col-md-4">
+            <div class="rr_treasury  panel panel-primary "> 
+              <div class="panel-heading">
+                <h3 class="panel-title">Treasury</h3>
+              </div>
+              <div class="panel-body" >
+                0
+              </div>
+            </div> 
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Update</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
 <div class="modal fade" tabindex="-1" role="dialog" id="modal--company-dividend">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -560,7 +632,7 @@ input[type="number"] { width: 40px; }
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-primary">Close</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
@@ -580,7 +652,7 @@ input[type="number"] { width: 40px; }
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-primary">Save</button>
+        <button type="button" class="btn btn-primary">Close</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
