@@ -124,9 +124,11 @@ io.on('connection', function(socket){
 
   socket.on('end_of_round', function(obj){
     savePlayerDividends(obj);
-    saveCompanyDividends(obj);
-    var round = increaseRound(obj);
-    io.emit('increase_round', round);
+  });
+
+  socket.on('score_game', function(obj){
+    calculateScore(obj.game_oid, obj.vp);
+    io.emit('score_game', round);
   });
 
   socket.on('get_players', function(obj){
@@ -158,8 +160,44 @@ function increaseRound(obj){
   });
 }
 
-function createNamespace(user){
+function calculateScore(game_id, vp){
+  var available_games = db.get(db_collection);
+  var c, scores = [];
+  available_games.findOne({ "_id" : monk.id(game_id) }).then(function(game) {
 
+    for(var x=0,len=companies.length;x<len;x++){
+      c = companies[x];
+      vp[ c ].vp = 0;
+      for ( var p in vp[ c ] ) {
+        if (vp[ c ].hasOwnProperty(p)) {
+          vp[ c ].vp += vp[ c ][ p ];
+        }
+      }
+      game.companies[ c ].vp = vp[ c ].vp;
+
+      for ( var u in game.users ) {
+        if (game.users.hasOwnProperty(u)) {
+          game.users[u].vp += ( game.companies[ c ].vp * game.users[u][c].stocks_owned );
+        }
+      }
+    }
+
+    for ( var u in game.users ) {
+      if (game.users.hasOwnProperty(u)) {
+        scores.push( game.users[u] );
+      }
+    }
+
+    available_games.findOneAndUpdate( { "_id" : monk.id(obj.game._id) }, game )
+    .then(function(new_game) {
+      scores.sort(compareVictoryPoints);
+      io.emit('score_game', scores);
+    });
+
+  });
+}
+
+function createNamespace(user){
   var np = keyify(user.tag);
 
   nsp_socket[np] = io.of('/'+np);
@@ -221,6 +259,21 @@ function compareDistance(a,b) {
   return 0;
 }
 
+function compareVictoryPoints(a,b) {
+  if (a.vp < b.vp)
+    return 1;
+  if (a.vp > b.vp)
+    return -1;
+  return 0;
+}
+
+function compareStocks(a,b) {
+  if (a.stocks < b.stocks)
+    return 1;
+  if (a.stocks > b.stocks)
+    return -1;
+  return 0;
+}
 
 function addGameInstance(io, obj){
   var available_games = db.get(db_collection);
@@ -321,7 +374,9 @@ function saveCompanyDividends(obj){
       .then(function(upd_game){
         console.log('Company treasury updated');
         io.emit('update_company_treasury', true );
-        // nsp_socket[obj.user].emit('close_company_dividend_window', true);
+        
+        var round = increaseRound(obj);
+        io.emit('increase_round', round);
     });
   });
 }
@@ -341,6 +396,8 @@ function savePlayerDividends(obj){
         console.log('Player treasuries updated');
         // nsp_socket[obj.user].emit('close_player_dividend_window', true);
         io.emit('update_player_treasury', true);
+
+        saveCompanyDividends(obj);
     });
   });
 }
@@ -384,9 +441,24 @@ function getCompanyInfo(obj){
   console.log('Getting company');
 
   available_games.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(game) {
-    console.log(obj);
-    io.emit('get_company', game.companies[obj.company_name]);
+    var c = obj.company_name;
+    game.companies[c].stockholders = getStockHolders(game, c);
+    io.emit('get_company', game.companies[ c ]);
   });
+}
+
+function getStockHolders(game, company_name){
+  var players = [], c = company_name;
+
+  for (var u in game.users) {
+    if (game.users.hasOwnProperty(u)) {
+      players.push({name: game.users[u].name, stocks: parseInt(game.users[u].companies[c].stocks_owned) });
+    }
+  }
+
+  players.sort(compareStocks);
+console.log(players);
+  return players;
 }
 
 function purchaseTransaction(obj){
@@ -404,6 +476,7 @@ function purchaseTransaction(obj){
       db_game )
     .then(function(game){
       console.log('Company updated');
+      game.companies[obj.company.tag].stockholders = getStockHolders(game, obj.company.tag);
       io.emit('update_company', db_game.companies[ obj.company.tag ]);
 
       nsp_socket[obj.client].emit('close_purchase_window', true);
@@ -424,6 +497,7 @@ function updateRailroadIncome(obj){
       db_game )
     .then(function(game){
       console.log('Company updated');
+      game.companies[obj.company.tag].stockholders = getStockHolders(game, obj.company.tag);
       io.emit('update_company', db_game.companies[ obj.company.tag ]);
 
       nsp_socket[obj.user].emit('close_income_window', true);
@@ -444,6 +518,7 @@ function subtractCosts(obj){
       db_game )
     .then(function(game){
       console.log('Company updated');
+      game.companies[obj.company].stockholders = getStockHolders(game, obj.company);
       io.emit('update_company', db_game.companies[ obj.company ]);
 
       nsp_socket[obj.client].emit('close_costs_window', true);
@@ -515,12 +590,17 @@ function getPlayerDividends(obj){
     // Player Companies
     var pc = user.companies;
     var c;
+    var stocks = [];
 
     for(var x=0,len=companies.length;x<len;x++){
       c = companies[x];
       dividend_payment = dividend_payment + (rr[c].dividend * pc[c].stocks_owned);
+      if(pc[c].stocks_owned > 0){
+        stocks.push( { name: c, stocks: pc[c].stocks_owned } );
+      }
     }
 
+    totals.stocks = stocks.sort(compareStocks);
     totals.dividend_payment = dividend_payment;
 
     return (onlyDividend) ? dividend_payment : totals;
@@ -581,7 +661,8 @@ function buildUserObj(user, num_players){
     tag: keyify(user.tag),
     companies: {},
     cash_total: player_amts[num_players],
-    dividend_payment: 0
+    dividend_payment: 0,
+    vp: 0
   };
 }
 
