@@ -2,6 +2,5 @@
 
 To-Do:
 
-* Change to end of round to have confirmations before running company & player dividends. https://ethaizone.github.io/Bootstrap-Confirmation/#
-* Add Round tracking
-
+* Waterfall updates for company update.
+* Close Window events not firing.

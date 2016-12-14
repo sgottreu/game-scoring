@@ -157,6 +157,7 @@ $( document ).ready(function() {
 
   $(".decreaseCompanyCosts").click(function(){
     $('#modal--costs').modal('toggle');
+    $("#rr_costs").val(0);
     $(".rr_treasury .panel-body").text(current_company.rr_treasury);
   });
 
@@ -165,21 +166,14 @@ $( document ).ready(function() {
   });
 
   $(".completeGame").on('click', function(event){
-    var label;
-    for(var x=0,len=companies.length;x<len;x++){
-      for(var y=0,len2=victory_point_values.length;y<len2;y++){
-        label = victory_point_values[y].key+'_'+companies[x];
-        var val = ($('#'+label).prop('checked')) ? $('#'+label).val() : 0;
-        console.log(victory_point_values[y].key+': '+val);
-      }
-    }
+    submitVictoryPointTotals();
   });
 
   $("#modal--buyStock .modal-footer button").click(function(event){
     var player = $(".player_name select").val();
 
-    if($('.purchase_price input').val() >user_treasuries[player]){
-      alert_msg('modal-body', 'You do not have enough money to purchase that amount of stock.');
+    if($('.purchase_price input').val() > user_treasuries[player]){
+      alert_msg('modal-body', 'There is not enough money in the player\'s treasury.');
     } else {
       var action = (!current_company.open) ? 'init_company': '';
       update(action);
@@ -325,6 +319,22 @@ $( document ).ready(function() {
     }
   }
 
+  function submitVictoryPointTotals(){
+    var label;
+    var obj = {}
+    for(var x=0,len=companies.length;x<len;x++){
+      obj[companies[x]] = {};
+
+      for(var y=0,len2=victory_point_values.length;y<len2;y++){
+        label = victory_point_values[y].key+'_'+companies[x];
+        var val = ($('#'+label).prop('checked')) ? parseInt( $('#'+label).val() ) : 0;
+
+        obj[companies[x]][ victory_point_values[y].key ] = val;
+      }
+    }
+    socket.emit('score_game', { game_oid: game_oid, vp: obj });
+  }
+
   function finalizePurchaseStockDialog(){
     $('#modal--buyStock').modal('toggle');
     confirmPlayerTreasury();
@@ -436,14 +446,20 @@ $( document ).ready(function() {
         break;
     }
 
+    var player = $(".player_name select").val();
+
     if(action == "stock_value"){
-      var player = $(".player_name select").val();
       if($('.purchase_price input').val() > user_treasuries[player]){
-        alert_msg('modal-body', 'You do not have enough money to purchase that amount of stock.');
+        alert_msg('modal-body', 'There is not enough money in the player\'s treasury.');
       }
     }
-    if(action == "rr_costs" && parseInt( $(spinner).val() ) >= current_company.rr_treasury){
+    if(action == "rr_costs" && parseInt( $(spinner).val() ) > current_company.rr_treasury){
       alert_msg('modal-body', 'The company does not have enough money to pay these building costs.');
+    }
+    if(action == "num_purchased_stocks" || action == "purchase_price"){
+      if(parseInt($('.purchase_price input').val()) > user_treasuries[player]){
+        alert_msg('modal-body', 'There is not enough money in the player\'s treasury.');
+      }
     }
 
 
@@ -473,6 +489,16 @@ $( document ).ready(function() {
     $("#remaining_stock__txt").text(company.remaining_stock);
 
     $(".rr_treasury .panel-body").text(company.rr_treasury);
+
+    var html = '';
+    var sh = company.stockholders;
+    for(var x=0,len=sh.length;x<len;x++){
+      if(sh[x].stocks > 0){
+        html += '<li><span class="name">'+sh[x].name+'</span><span class="stocks">'+sh[x].stocks+'</span></li>';
+      }
+    }
+
+    $(".company_pane__fields .stockholders").html(html);
 
     current_company = company;
   }
@@ -532,9 +558,7 @@ $( document ).ready(function() {
   }
 
   function addPlayerDividends(users){
-
     var html = '';
-
     for (var user in users) {
       if (users.hasOwnProperty(user)) {
         html += '<div class="col-xs-6 col-md-3">';
@@ -549,7 +573,6 @@ $( document ).ready(function() {
         html += '</div>';
       }
     }
-
     $("#modal--player-dividend .modal-body .row").html(html);
   }
 
@@ -643,42 +666,46 @@ $( document ).ready(function() {
     var cv = obj.companies;
     var company = $('.company_pane .btn.active').text().toLowerCase();
 
+    if(company != ''){
+      $("#modal--buyStock .modal-header h5").text(cv[ company ].name );
+      $("#modal--income .modal-header h5").text(cv[ company ].name );
 
-    $("#modal--buyStock .modal-header h5").text(cv[ company ].name );
-    $("#modal--income .modal-header h5").text(cv[ company ].name );
+      var prv_sv = [], min_sv = 10;
+      if(obj.purchase){
+        $('.num_purchased_stocks input').val(1);
 
-    var prv_sv = [], min_sv = 10;
-    if(obj.purchase){
-      if(cv[ company ].open){
-        $(".purchase_price input").val( cv[ company ].stock_price );
+        if(cv[ company ].open){
+          $(".purchase_price input").val( cv[ company ].stock_price );
 
-        $(".num_purchased_stocks").removeClass("hidden");
+          $(".num_purchased_stocks").removeClass("hidden");
 
-        $("#modal--buyStock .stock_value").addClass("hidden");
-        $("#modal--buyStock .stocks_issued").addClass("hidden");
-      } else {
-        for(var x=0,len=companies.length;x<len;x++){
-          if(cv[ companies[x] ].open && !inArray(cv[ companies[x] ].stock_value, stock_values)){
-            stock_values.push(cv[ companies[x] ].stock_value);
+          $("#modal--buyStock .stock_value").addClass("hidden");
+          $("#modal--buyStock .stocks_issued").addClass("hidden");
+        } else {
+          for(var x=0,len=companies.length;x<len;x++){
+            if(cv[ companies[x] ].open && !inArray(cv[ companies[x] ].stock_value, stock_values)){
+              stock_values.push(cv[ companies[x] ].stock_value);
+            }
           }
-        }
-        stock_values.sort(sortNumber);
-        for(var x=0,len=stock_values.length;x<len;x++){
-          if(stock_values[x] == min_sv){
-            min_sv++;
+          stock_values.sort(sortNumber);
+          for(var x=0,len=stock_values.length;x<len;x++){
+            if(stock_values[x] == min_sv){
+              min_sv++;
+            }
           }
+
+          $("#modal--buyStock .stock_value").removeClass("hidden");
+          $("#modal--buyStock .stocks_issued").removeClass("hidden");
+
+          $(".stock_value input").val(min_sv);
+          $(".stocks_issued input").val(3);
+
+          $(".num_purchased_stocks").addClass("hidden");
+          $(".purchase_price input").val(min_sv);
         }
-
-        $("#modal--buyStock .stock_value").removeClass("hidden");
-        $("#modal--buyStock .stocks_issued").removeClass("hidden");
-
-        $(".stock_value input").val(min_sv);
-        $(".stocks_issued input").val(3);
-
-        $(".num_purchased_stocks").addClass("hidden");
-        $(".purchase_price input").val(min_sv);
-      }
+      }   
     }
+  
   };
 
   function setPlayerDropdown(players){
@@ -715,12 +742,14 @@ $( document ).ready(function() {
 
       for(var y=0,len2=victory_point_values.length;y<len2;y++){
         val = victory_point_values[y];
-        disabled = (val.key == 'no_stock') ? 'disabled="disabled"' : '';
+        disabled = (val.key == 'vp_no_stock') ? 'disabled="disabled"' : '';
         html += '<div><input data-key="'+val.key+'" data-company="'+companies[x]+'" type="checkbox" '+disabled+' value="'+val.value+'" class="vp_chk_bx '+val.key+' '+companies[x]+'" id="'+val.key+'_'+companies[x]+'"> <label for="'+val.key+'_'+companies[x]+'">'+val.label+'</label></div>';
       }
       html += '</div>';
       $(".company_pane__fields.victory_points").append(html);
     }
+
+    $(".vp_no_stock").prop('disabled', true);
 
     $(".vp_chk_bx").on('click', function(e){
       var vp_key, key, company, index;
@@ -850,6 +879,11 @@ $( document ).ready(function() {
     }
   });
 
+  socket.on('score_game', function(obj){
+    for(var x=0,len=obj.length;x<len;x++){
+      console.log(obj[x].name+': '+obj[x].vp);
+    }
+  });
 
   function setUserRoom(){
     nsp_socket = io('/'+user );
@@ -881,15 +915,16 @@ $( document ).ready(function() {
     nsp_socket.on('get_player_totals', function(player){
       $('#user_treasury__txt').text(player.user_treasury);
       $('#player_dividend__txt').text(player.dividend_payment);
-    });
 
-    // nsp_socket.on('get_player_dividends', function(players){
-    //   for (var user in players) {
-    //     if (players.hasOwnProperty(user)) {
-    //         $('#modal--player-dividend .'+players[user].tag+' .panel-body').text(players[user].dividend_payment);
-    //     }
-    //   }
-    // });
+      var html = '';
+      var sh = player.stocks;
+      for(var x=0,len=sh.length;x<len;x++){
+        if(sh[x].stocks > 0){
+          html += '<li><span class="name">'+sh[x].name+'</span><span class="stocks">'+sh[x].stocks+'</span></li>';
+        }
+      }
+      $(".player_stocks .panel-body").html(html);
+    });
 
   }
 

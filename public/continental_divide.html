@@ -59,15 +59,16 @@ input[type="number"] { width: 40px; }
   width: 100px;
 }
 .spinner input {
-    text-align: right;
-    width: 82% !important;
+    text-align: center;
+    width: 100% !important;
     font-size: 25px;
     height: 70px;
+    padding: 5px;
 }
 
 .input-group.spinner .btn-default {
-    width: 35px;
-    height: 35px;
+    width: 36px;
+    height: 36px;
 }
 
 .input-group-btn-vertical {
@@ -76,7 +77,7 @@ input[type="number"] { width: 40px; }
   width: 1%;
   vertical-align: middle;
   display: table-cell;
-  left: -15%;
+  left: 0%;
 }
 .input-group-btn-vertical > .btn {
   display: block;
@@ -171,6 +172,45 @@ input[type="number"] { width: 40px; }
   margin-top: 15px;
 }
 
+.company_pane__fields .stockholders li {
+  list-style: none;
+  font-weight: bold;
+  text-align: left;
+}
+
+.company_pane__fields .stockholders .name {
+  width: 200px;
+  display: inline-block;
+}
+
+.company_pane__fields .stockholders .stocks {
+  text-align: right;
+}
+
+.player_stocks .panel-body li {
+  list-style: none;
+  font-weight: bold;
+  text-align: left;
+}
+
+.player_stocks .panel-body .name {
+  width: 200px;
+  display: inline-block;
+  text-transform:capitalize;
+}
+
+.player_stocks .panel-body .stocks {
+  text-align: right;
+}
+
+@media (max-width: 650px) {
+  .btn-toolbar.company_pane .btn-group {
+    width: 110px;
+    margin: 10px auto;
+  }
+  .game_link_txt { width: 85%; }
+}
+
 @media (max-width: 370px) {
   .btn-toolbar.company_pane .btn-group {
     width: 200px;
@@ -262,6 +302,19 @@ input[type="number"] { width: 40px; }
       </div>
 
       <div class="row company_pane__fields hidden">
+        <div class="col-xs-12 col-sm-6 col-md-3 "> 
+          <div class="panel panel-primary"> 
+            <div class="panel-heading">
+              <h3 class="panel-title">Stockholders</h3>
+            </div>
+            <div class="panel-body">
+              <ul class="stockholders"></ul>
+            </div> 
+          </div> 
+        </div>
+      </div>
+
+      <div class="row company_pane__fields hidden">
         <div class="col-xs-12 col-sm-6 col-md-3 hidden"> 
           <div class="stock_value txt_val"> 
             <span>Stock Value</span> 
@@ -280,7 +333,6 @@ input[type="number"] { width: 40px; }
             <span id="rr_income__txt">0</span>  
           </div> 
         </div>
-
       </div>
       <div class="row company_pane__fields hidden">
         <div class="col-xs-12 col-sm-6 col-md-3 "> 
@@ -367,6 +419,20 @@ input[type="number"] { width: 40px; }
           </div>
         </div>
       </div>
+
+      <div class="row">
+        <div class="col-xs-12 col-sm-6 col-md-3"> 
+          <div class="player_stocks panel panel-primary"> 
+            <div class="panel-heading">
+              <h3 class="panel-title">Stocks Owned</h3>
+            </div>
+            <div class="panel-body" id="">
+              
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- /#player_block -->
 
 
