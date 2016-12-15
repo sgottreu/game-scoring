@@ -40,9 +40,16 @@ $( document ).ready(function() {
     socket.emit('get_player_totals', { game_oid: game_oid, user: user });
   });
 
-  $(".endofround_block").on('click', function(){
+  // $(".company_block").on('click', function(){
+  //   if( $( ".dropdown.xs:hidden").length > 0){
+  //     if( $(".btn-group .btn.active").length == 0 ){
+  //       $( ".dropdown.xs").addClass('open');
+  //               console.log('Nothing selected');
+  //     }
+  //   }
+  // });
 
-  });
+  // $('.dropdown-toggle').dropdown();
 
   /*** Modal Setup ******/
 
@@ -58,6 +65,10 @@ $( document ).ready(function() {
     show:false
   });
 
+  $('#modal--victory-points').modal({
+    show:false
+  });
+
   addCompanyDividends();
 
   $('.modal-header button').on('click', function() {
@@ -65,20 +76,7 @@ $( document ).ready(function() {
   });
 
   $(".company_pane .btn").click(function(){
-    $(".company_pane .btn").removeClass('active');
-    $(this).toggleClass('active');
-    var company_name = $(".company_pane .btn.active").text().toLowerCase();
-
-    if(current_round <= 8){
-      $(".purchaseCompanyStock").removeClass('hidden');
-      $('.increaseCompanyIncome').removeClass('hidden');
-      $('.decreaseCompanyCosts').removeClass('hidden');
-    } else {
-      $('.company_pane__fields.victory_points').removeClass('hidden');
-      $('.vp_company').addClass('hidden');
-      $('.vp_'+company_name).removeClass('hidden');
-    }
-    socket.emit('get_company', { game_oid: game_oid, company_name: company_name });
+    clickCompanyButton(this);
   });
 
   $("#modal--username .modal-header button").click(function(event){
@@ -220,6 +218,11 @@ $( document ).ready(function() {
     removeBackdrop();
   });
 
+  $("#modal--victory-points .modal-footer button").click(function(){
+    $('#modal--victory-points').modal('toggle');
+    removeBackdrop();
+  });
+
   $('.modal .spinner .btn:first-of-type').on('click', function() {
     var spinner = $(this).parent().parent().find('input');
     var action = $(this).data('action');
@@ -289,6 +292,23 @@ $( document ).ready(function() {
       });
     }
   
+  }
+
+  function clickCompanyButton(el){
+    $(".company_pane .btn").removeClass('active');
+    $(el).toggleClass('active');
+    var company_name = $(".company_pane .btn.active").text().toLowerCase();
+
+    if(current_round <= 8){
+      $(".purchaseCompanyStock").removeClass('hidden');
+      $('.increaseCompanyIncome').removeClass('hidden');
+      $('.decreaseCompanyCosts').removeClass('hidden');
+    } else {
+      $('.company_pane__fields.victory_points').removeClass('hidden');
+      $('.vp_company').addClass('hidden');
+      $('.vp_'+company_name).removeClass('hidden');
+    }
+    socket.emit('get_company', { game_oid: game_oid, company_name: company_name });
   }
 
   function createGameLink(){
@@ -805,6 +825,15 @@ $( document ).ready(function() {
 
     addPlayerDividends(msg.users);
     updateRound(msg.current_round);
+
+    // if( $( ".dropdown.xs:hidden").length > 0){
+    //   if( $(".btn-group .btn.active").length == 0){
+    //     console.log('Nothing selected');
+    //     clickCompanyButton($(".dropdown.xs .company_pane .btn.blue"));
+    //     //$(".company_pane .btn.blue").click().addClass('active');
+    //   }
+    // }
+
   });
 
   socket.on('get_company', function(company){
@@ -855,7 +884,7 @@ $( document ).ready(function() {
   socket.on('get_player_dividends', function(players){
     for (var user in players) {
       if (players.hasOwnProperty(user)) {
-          $('#modal--player-dividend .'+players[user].tag+' .panel-body').text(players[user].dividend_payment);
+        $('#modal--player-dividend .'+players[user].tag+' .panel-body').text(players[user].dividend_payment);
       }
     }
   });
@@ -880,32 +909,37 @@ $( document ).ready(function() {
   });
 
   socket.on('score_game', function(obj){
+    $("#modal--victory-points .panel-body").html('');
+    var html = '';
     for(var x=0,len=obj.length;x<len;x++){
-      console.log(obj[x].name+': '+obj[x].vp);
+      //console.log(obj[x].name+': '+obj[x].vp);
+      html += '<li><span class="name">'+obj[x].name+'</span><span class="vp">'+obj[x].vp+'</span></li>';
     }
+    $("#modal--victory-points .panel-body").html(html);
+    $("#modal--victory-points").modal('toggle');
   });
 
   function setUserRoom(){
     nsp_socket = io('/'+user );
 
     nsp_socket.on('close_purchase_window', function(company){
-      $('#modal--buyStock').modal('toggle');
+      $('#modal--buyStock').modal('hide');
     });
 
     nsp_socket.on('close_income_window', function(company){
-      $('#modal--income').modal('toggle');
+      $('#modal--income').modal('hide');
     });
 
     nsp_socket.on('close_costs_window', function(company){
-      $('#modal--costs').modal('toggle');
+      $('#modal--costs').modal('hide');
     });
 
     nsp_socket.on('close_company_dividend_window', function(company){
-      $('#modal--company-dividend').modal('toggle');
+      $('#modal--company-dividend').modal('hide');
     });
 
     nsp_socket.on('close_player_dividend_window', function(company){
-      $('#modal--player-dividend').modal('toggle');
+      $('#modal--player-dividend').modal('hide');
     });
 
     nsp_socket.on('get_players', function(players){
