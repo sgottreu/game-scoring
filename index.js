@@ -118,17 +118,12 @@ io.on('connection', function(socket){
     getPlayerDividends(obj);
   });
 
-  // socket.on('update_company_treasury', function(obj){
-  //   saveCompanyDividends(obj);
-  // });
-
   socket.on('end_of_round', function(obj){
     savePlayerDividends(obj);
   });
 
   socket.on('score_game', function(obj){
     calculateScore(obj.game_oid, obj.vp);
-    io.emit('score_game', round);
   });
 
   socket.on('get_players', function(obj){
@@ -164,20 +159,28 @@ function calculateScore(game_id, vp){
   var available_games = db.get(db_collection);
   var c, scores = [];
   available_games.findOne({ "_id" : monk.id(game_id) }).then(function(game) {
+    console.log('calculating Score');
+
+      for ( var u in game.users ) {
+        if (game.users.hasOwnProperty(u)) {
+          game.users[u].vp = 0;
+        }
+      }
+
 
     for(var x=0,len=companies.length;x<len;x++){
       c = companies[x];
       vp[ c ].vp = 0;
       for ( var p in vp[ c ] ) {
         if (vp[ c ].hasOwnProperty(p)) {
-          vp[ c ].vp += vp[ c ][ p ];
+          vp[ c ].vp += parseInt( vp[ c ][ p ] );
         }
       }
       game.companies[ c ].vp = vp[ c ].vp;
 
       for ( var u in game.users ) {
         if (game.users.hasOwnProperty(u)) {
-          game.users[u].vp += ( game.companies[ c ].vp * game.users[u][c].stocks_owned );
+          game.users[u].vp += ( parseInt(game.companies[ c ].vp) * parseInt(game.users[u].companies[c].stocks_owned) );
         }
       }
     }
@@ -188,7 +191,7 @@ function calculateScore(game_id, vp){
       }
     }
 
-    available_games.findOneAndUpdate( { "_id" : monk.id(obj.game._id) }, game )
+    available_games.findOneAndUpdate( { "_id" : monk.id(game._id) }, game )
     .then(function(new_game) {
       scores.sort(compareVictoryPoints);
       io.emit('score_game', scores);
@@ -394,9 +397,7 @@ function savePlayerDividends(obj){
     available_games.update( { "_id" : monk.id(obj.game_oid) }, game )
       .then(function(upd_game){
         console.log('Player treasuries updated');
-        // nsp_socket[obj.user].emit('close_player_dividend_window', true);
-        io.emit('update_player_treasury', true);
-
+        nsp_socket[obj.user].emit('close_player_dividend_window', true);
         saveCompanyDividends(obj);
     });
   });
@@ -447,17 +448,14 @@ function getCompanyInfo(obj){
   });
 }
 
-function getStockHolders(game, company_name){
+function getStockHolders(game, company_name, func){
   var players = [], c = company_name;
-
   for (var u in game.users) {
     if (game.users.hasOwnProperty(u)) {
       players.push({name: game.users[u].name, stocks: parseInt(game.users[u].companies[c].stocks_owned) });
     }
   }
-
   players.sort(compareStocks);
-console.log(players);
   return players;
 }
 
@@ -476,7 +474,7 @@ function purchaseTransaction(obj){
       db_game )
     .then(function(game){
       console.log('Company updated');
-      game.companies[obj.company.tag].stockholders = getStockHolders(game, obj.company.tag);
+      db_game.companies[obj.company.tag].stockholders = getStockHolders(db_game, obj.company.tag);
       io.emit('update_company', db_game.companies[ obj.company.tag ]);
 
       nsp_socket[obj.client].emit('close_purchase_window', true);
@@ -496,11 +494,11 @@ function updateRailroadIncome(obj){
       { "_id" : monk.id(obj.game_oid) },
       db_game )
     .then(function(game){
-      console.log('Company updated');
-      game.companies[obj.company.tag].stockholders = getStockHolders(game, obj.company.tag);
+      db_game.companies[obj.company.tag].stockholders = getStockHolders(db_game, obj.company.tag, 'updateRailroadIncome');
       io.emit('update_company', db_game.companies[ obj.company.tag ]);
-
+      console.log('Company updated');
       nsp_socket[obj.user].emit('close_income_window', true);
+      console.log('Send Close Window');
     });
   });
 }
@@ -518,7 +516,7 @@ function subtractCosts(obj){
       db_game )
     .then(function(game){
       console.log('Company updated');
-      game.companies[obj.company].stockholders = getStockHolders(game, obj.company);
+      db_game.companies[obj.company].stockholders = getStockHolders(db_game, obj.company);
       io.emit('update_company', db_game.companies[ obj.company ]);
 
       nsp_socket[obj.client].emit('close_costs_window', true);
