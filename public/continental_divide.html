@@ -634,7 +634,7 @@ input[type="number"] { width: 40px; }
               <span>Stock Value</span> 
               <span>
                 <div class="input-group spinner"> 
-                  <input type="text" class="form-control" value="0" data-action="stock_value"> 
+                  <input type="text" class="form-control" value="0" id="stock_value" data-action="stock_value"> 
                   <div class="input-group-btn-vertical"> 
                     <button class="btn btn-default" type="button" data-action="stock_value"><i class="fa fa-caret-up"></i></button> 
                     <button class="btn btn-default" type="button" data-action="stock_value"><i class="fa fa-caret-down"></i></button> 
@@ -666,7 +666,7 @@ input[type="number"] { width: 40px; }
               <span># Stocks to Purchase</span> 
               <span>
                 <div class="input-group spinner"> 
-                  <input type="text" class="form-control" value="1" > 
+                  <input type="text" class="form-control" value="1" data-action="num_purchased_stocks"> 
                   <div class="input-group-btn-vertical"> 
                     <button class="btn btn-default" type="button" data-action="num_purchased_stocks"><i class="fa fa-caret-up"></i></button> 
                     <button class="btn btn-default" type="button" data-action="num_purchased_stocks"><i class="fa fa-caret-down"></i></button> 
@@ -682,7 +682,7 @@ input[type="number"] { width: 40px; }
               <span>Amount to Pay</span> 
               <span>
                 <div class="input-group spinner"> 
-                  <input type="text" class="form-control" value="0" > 
+                  <input type="text" class="form-control" value="0" data-action="purchase_price"> 
                   <div class="input-group-btn-vertical"> 
                     <button class="btn btn-default" type="button" data-action="purchase_price"><i class="fa fa-caret-up"></i></button> 
                     <button class="btn btn-default" type="button" data-action="purchase_price"><i class="fa fa-caret-down"></i></button> 
@@ -749,7 +749,7 @@ input[type="number"] { width: 40px; }
               <span class="">Building Costs: </span> 
               <span>
                 <div class="input-group spinner"> 
-                  <input type="text" class="form-control" value="0" id="rr_costs" > 
+                  <input type="text" class="form-control" value="0" id="rr_costs" data-action="rr_costs"> 
                   <div class="input-group-btn-vertical"> 
                     <button class="btn btn-default" type="button" data-action="rr_costs"><i class="fa fa-caret-up"></i></button> 
                     <button class="btn btn-default" type="button" data-action="rr_costs"><i class="fa fa-caret-down"></i></button> 

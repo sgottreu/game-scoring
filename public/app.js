@@ -40,17 +40,6 @@ $( document ).ready(function() {
     socket.emit('get_player_totals', { game_oid: game_oid, user: user });
   });
 
-  // $(".company_block").on('click', function(){
-  //   if( $( ".dropdown.xs:hidden").length > 0){
-  //     if( $(".btn-group .btn.active").length == 0 ){
-  //       $( ".dropdown.xs").addClass('open');
-  //               console.log('Nothing selected');
-  //     }
-  //   }
-  // });
-
-  // $('.dropdown-toggle').dropdown();
-
   /*** Modal Setup ******/
 
   $('#modal--username').modal({
@@ -160,7 +149,9 @@ $( document ).ready(function() {
   });
 
   $("#modal--costs .modal-footer button").click(function(event){
-    subtractCosts();
+    if( validatePurchase('rr_costs', $("#rr_costs")) ){
+      subtractCosts();
+    }
   });
 
   $(".completeGame").on('click', function(event){
@@ -169,12 +160,20 @@ $( document ).ready(function() {
 
   $("#modal--buyStock .modal-footer button").click(function(event){
     var player = $(".player_name select").val();
+    var bolValid = true;
+    var tmpValid;
+    var actions = (!$("#modal--buyStock .stock_value").hasClass('hidden')) ? ['stock_value', 'stocks_issued', 'purchase_price'] : ['num_purchased_stocks', 'purchase_price'];
 
-    if($('.purchase_price input').val() > user_treasuries[player]){
-      alert_msg('modal-body', 'There is not enough money in the player\'s treasury.');
-    } else {
-      var action = (!current_company.open) ? 'init_company': '';
-      update(action);
+    for(var x=0;x<actions.length;x++){
+      tmpValid = validatePurchase(actions[x], $("."+actions[x]+' .spinner input') );
+      if(!tmpValid){
+        bolValid = false;
+      }
+    }
+
+    if(bolValid){
+      var srv_action = (!current_company.open) ? 'init_company': '';
+      update(srv_action);
       removeBackdrop();
     }
   });
@@ -280,6 +279,10 @@ $( document ).ready(function() {
     calculateEndOfRound();
   });
 
+  $(".spinner input").on("keyup", function(){
+    updateValue($(this), $(this).data('action') );
+  });
+
 });
 
   function alert_msg(klass, msg, fadeOut){
@@ -292,6 +295,40 @@ $( document ).ready(function() {
       });
     }
   
+  }
+
+  function validatePurchase(action, spinner){
+    var player = $(".player_name select").val();
+
+    var bolValid = true;
+
+    if(action == "stock_value"){
+      // if($('.purchase_price input').val() > user_treasuries[player]){
+      //   alert_msg('modal-body', 'There is not enough money in the player\'s treasury.');
+      //   bolValid = false;
+      // }
+      if( parseInt( $(spinner).val()) < 10 || parseInt( $(spinner).val()) > 50){
+        alert_msg('modal-body', 'This is not a valid opening stock value.');
+        bolValid = false;
+      }
+    }
+    if(action == "stocks_issued"){
+      if( parseInt( $(spinner).val()) < 3 || parseInt( $(spinner).val()) > 10){
+        alert_msg('modal-body', 'That is not a valid quantity for stocks.');
+        bolValid = false;
+      }
+    }
+    if(action == "rr_costs" && parseInt( $(spinner).val() ) > current_company.rr_treasury){
+      alert_msg('modal-body', 'The company does not have enough money to pay these building costs.');
+      bolValid = false;
+    }
+    if(action == "num_purchased_stocks" || action == "purchase_price"){
+      if(parseInt($('.purchase_price input').val()) > user_treasuries[player]){
+        alert_msg('modal-body', 'There is not enough money in the player\'s treasury.');
+        bolValid = false;
+      }
+    }
+    return bolValid;
   }
 
   function clickCompanyButton(el){
@@ -373,17 +410,21 @@ $( document ).ready(function() {
       if(val < 50){
         val++;
       }
-    } else {
+    } else if(dir == 'dec') {
       if(val > 10){
         val--;            
       }
-    }  
+    } else {
+      if(val < 50){
+        val++;
+      }
+    }
 
     if(val < 10 || val > 50){
       return false;
     }
 
-    if((inArray(val, stock_values)) && (val > 10 && val < 50)){
+    if((inArray(val, stock_values)) && (val >= 10 && val <= 50)){
       return skipTakenStockValues(val,dir);
     } else {
       return val;
@@ -410,7 +451,7 @@ $( document ).ready(function() {
           if(val < 10){
             $(spinner).val( val + 1);
           }
-        } else {
+        } else if(dir == 'dec') {
           if(val > 3){
             $(spinner).val( val - 1);
           }
@@ -422,7 +463,7 @@ $( document ).ready(function() {
             val++;
             $(spinner).val( val );
           }
-        } else {
+        } else if(dir == 'dec') {
           if(val > 1){
             val--;
             $(spinner).val( val );
@@ -434,7 +475,7 @@ $( document ).ready(function() {
         var num_purchased_stocks = $('.num_purchased_stocks input').val();
         if(dir == 'inc'){
           $(spinner).val( val + 1);
-        } else {
+        } else if(dir == 'dec') {
           var price = current_company.open ? current_company.stock_price * num_purchased_stocks : 10;
           if(val > price){
             $(spinner).val( val - 1);
@@ -444,7 +485,7 @@ $( document ).ready(function() {
       case "rr_income":
         if(dir == 'inc'){
           $(spinner).val( val + 1);
-        } else {
+        } else if(dir == 'dec') {
           var price = current_company.rr_income;
           if(val > price){
             $(spinner).val( val - 1);
@@ -456,7 +497,7 @@ $( document ).ready(function() {
           if(val < current_company.rr_treasury){
             $(spinner).val( val + 1);
           } 
-        } else {
+        } else if(dir == 'dec') {
           if(val > 0){
             $(spinner).val( val - 1);
           }
@@ -466,21 +507,7 @@ $( document ).ready(function() {
         break;
     }
 
-    var player = $(".player_name select").val();
-
-    if(action == "stock_value"){
-      if($('.purchase_price input').val() > user_treasuries[player]){
-        alert_msg('modal-body', 'There is not enough money in the player\'s treasury.');
-      }
-    }
-    if(action == "rr_costs" && parseInt( $(spinner).val() ) > current_company.rr_treasury){
-      alert_msg('modal-body', 'The company does not have enough money to pay these building costs.');
-    }
-    if(action == "num_purchased_stocks" || action == "purchase_price"){
-      if(parseInt($('.purchase_price input').val()) > user_treasuries[player]){
-        alert_msg('modal-body', 'There is not enough money in the player\'s treasury.');
-      }
-    }
+    validatePurchase(action, spinner);
 
 
   }
@@ -826,13 +853,9 @@ $( document ).ready(function() {
     addPlayerDividends(msg.users);
     updateRound(msg.current_round);
 
-    // if( $( ".dropdown.xs:hidden").length > 0){
-    //   if( $(".btn-group .btn.active").length == 0){
-    //     console.log('Nothing selected');
-    //     clickCompanyButton($(".dropdown.xs .company_pane .btn.blue"));
-    //     //$(".company_pane .btn.blue").click().addClass('active');
-    //   }
-    // }
+    if( msg.newest_user == user && $(".player_block.active").length > 0){
+      socket.emit('get_player_totals', { game_oid: game_oid, user: user });
+    }
 
   });
 
