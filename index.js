@@ -161,30 +161,31 @@ function calculateScore(game_id, vp){
   available_games.findOne({ "_id" : monk.id(game_id) }).then(function(game) {
     console.log('calculating Score');
 
+    if(game.completed == 0){
       for ( var u in game.users ) {
         if (game.users.hasOwnProperty(u)) {
           game.users[u].vp = 0;
         }
       }
 
+      for(var x=0,len=companies.length;x<len;x++){
+        c = companies[x];
+        vp[ c ].vp = 0;
+        for ( var p in vp[ c ] ) {
+          if (vp[ c ].hasOwnProperty(p)) {
+            vp[ c ].vp += parseInt( vp[ c ][ p ] );
+          }
+        }
+        game.companies[ c ].vp = vp[ c ].vp;
 
-    for(var x=0,len=companies.length;x<len;x++){
-      c = companies[x];
-      vp[ c ].vp = 0;
-      for ( var p in vp[ c ] ) {
-        if (vp[ c ].hasOwnProperty(p)) {
-          vp[ c ].vp += parseInt( vp[ c ][ p ] );
+        for ( var u in game.users ) {
+          if (game.users.hasOwnProperty(u)) {
+            game.users[u].vp += ( parseInt(game.companies[ c ].vp) * parseInt(game.users[u].companies[c].stocks_owned) );
+          }
         }
       }
-      game.companies[ c ].vp = vp[ c ].vp;
-
-      for ( var u in game.users ) {
-        if (game.users.hasOwnProperty(u)) {
-          game.users[u].vp += ( parseInt(game.companies[ c ].vp) * parseInt(game.users[u].companies[c].stocks_owned) );
-        }
-      }
+      game.completed = 1;
     }
-
     for ( var u in game.users ) {
       if (game.users.hasOwnProperty(u)) {
         scores.push( game.users[u] );
@@ -616,7 +617,8 @@ function buildGameInstance(obj){
     location: obj.user.location,
     num_players: obj.game.num_players,
     companies: {},
-    creator: obj.user
+    creator: obj.user,
+    completed: 0
   };
 
   for(var x=0,len=companies.length;x<len;x++){
