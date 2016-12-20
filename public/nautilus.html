@@ -1,14 +1,18 @@
+<!DOCTYPE html>
 <html>
-<head>
-<title>Nautilus Industries Scoring App</title>
-  <meta name="viewport" content="initial-scale=1, maximum-scale=1">
+ <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Nautilus Industries Scoring App</title>
 
-  <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+<link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+<!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
 <!-- Optional theme -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-
+<!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" crossorigin="anonymous"> -->
 <link rel="stylesheet" href="font-awesome.min.css" crossorigin="anonymous">
 
 <style>
@@ -17,30 +21,41 @@
   .share_price { }
   .share_price input { width: 40px;}
   .name { width: 125px;}
-  .currency { width: 50px;}
+  .currency_val { width: 50px;}
   .score { width: 50px; }
   table { border-collapse: collapse; border: 1px solid #000; margin: 0 auto; }
   th, td { padding: 5px;}
   p { text-align: center;}
 
   .header {
-    background: #34ade2; 
+    /*background: #34ade2; */
   }
 
+  .gold { background-color: #FFD700; }
+  .blue { background-color: #56B4BF; }
+  .orange { background-color: #FF8C00; }
+  .green { background-color: #57B873; color: #fff; }
+  .black { background-color: #6D5F5F; color: #fff; }
+  .currency { background-color: #966E4A;  color: #fff; }
 
-.spinner {
-  width: 25px;
-}
-.spinner input {
+  .spinner {
+    display: block !important;
+  }
+  .input-group-btn-vertical {
+    display: none;
+  }
+
+/*.spinner input {
   text-align: right;
   width: 50px !important;
-}
-.input-group-btn-vertical {
+}*/
+/*.input-group-btn-vertical {
   position: relative;
   white-space: nowrap;
   width: 1%;
   vertical-align: middle;
-  display: table-cell;
+ 
+  display:none;
   left: 0%;
 }
 .input-group-btn-vertical > .btn {
@@ -65,30 +80,38 @@
   position: absolute;
   top: 0;
   left: 4px;
-}
+}*/
 
 .players .form-control {
-  width: 30px;
+  width: 50px;
 }
 
 #modal--stock_price h3, #modal--player_add h3 {
-  display: inline-block;
+  display: block;
+  text-align: center;
 }
-#modal--stock_price .panel, #modal--player_add .panel {
+/*#modal--stock_price .panel, #modal--player_add .panel {
   width: 90%;
   margin: 10 auto;
-}
+}*/
 
 #modal--stock_price .panel input, #modal--player_add .panel input {
   width: 50px;
   height: 40px;
   font-size:24px;
   text-align: center;
+  margin: 0 auto;
+  display: block;
 }
 
 #name_player_input {
   width: 300px !important;
   text-align: left !important;
+}
+
+.btn_stock_prices, .btn_player_scores {
+  text-align: center;
+  margin: 20px;
 }
 
 </style>
@@ -98,28 +121,35 @@
 <table border="1">
 	<tr>
     <th rowspan="2" class="header">
-      <img src="/images/nautilus_logo.png" width="100">
+      <!-- <img src="/images/nautilus_logo.png" width="100"> -->
+      <h3>Player</h3>
     </th>
     <th colspan="1" rowspan="2" class="header">
-      <img width="75" src="/images/ni_currency.png">
+      <!-- <img width="75" src="/images/ni_currency.png"> -->
+      <h3>Currency</h3>
     </th>
     <th colspan="1" class="header">
-      <img width="75" src="/images/ni_gold.png">
+      <!-- <img width="75" src="/images/ni_gold.png"> -->
+      <h3>Gold</h3>
     </th>
     <th colspan="1" class="header">
-      <img width="75" src="/images/ni_darrillium.png">
+      <!-- <img width="75" src="/images/ni_darrillium.png"> -->
+      <h3>Blue</h3>
     </th>
     <th colspan="1" class="header">
-      <img width="75" src="/images/ni_nitronium.png">
+      <!-- <img width="75" src="/images/ni_nitronium.png"> -->
+      <h3>Orange</h3>
     </th>
     <th colspan="1" class="header">
-      <img width="75" src="/images/ni_elerium.png">
+      <!-- <img width="75" src="/images/ni_elerium.png"> -->
+      <h3>Green</h3>
     </th>
     <th colspan="1" class="header">
-      <img width="75" src="/images/ni_iron.png">
+      <!-- <img width="75" src="/images/ni_iron.png"> -->
+      <h3>Black</h3>
     </th>
     <th colspan="1" rowspan="2" class="header">
-      Score
+      <h3>Score</h3>
     </th>
   </tr>
   <tr class="share_price">
@@ -137,13 +167,21 @@
   </tr>
 
 </table>
-<button type="button" class="btn btn-primary btnStockPrices " autocomplete="off"> 
-  Stock Prices
-</button> 
 
-<button type="button" class="btn btn-primary btnPlayerScores " autocomplete="off"> 
-  Player Scores
-</button> 
+<div class="row ">
+  <div class="btn_stock_prices col-xs-12 col-sm-12 col-md-12"> 
+    <button type="button" class="btn btn-primary btnStockPrices " autocomplete="off"> 
+      Stock Prices
+    </button> 
+  </div>
+</div>
+<div class="row ">
+  <div class="btn_player_scores col-xs-12 col-sm-12 col-md-12"> 
+    <button type="button" class="btn btn-primary btnPlayerScores " autocomplete="off"> 
+      Player Scores
+    </button> 
+  </div>
+</div>
 
 <div class="modal fade" tabindex="-1" role="dialog" id="modal--stock_price">
   <div class="modal-dialog" role="document">
@@ -155,15 +193,15 @@
       </div>
       <div class="modal-body">
         <div class="row ">
-          <div class="stock_price panel panel-success"> 
-            <div class="panel-heading">
-              <img width="50" src="/images/ni_gold.png">
+          <div class="stock_price panel col-xs-6 col-sm-6 col-md-6"> 
+            <div class="panel-heading gold">
+              <!-- <img width="50" src="/images/ni_gold.png"> -->
               
-              <h3>Gold</h3>
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Gold</h3>
             </div>
             <div class="panel-body" >
             <div class="input-group spinner"> 
-              <input type="text" id="gold_price_input" value="1">
+              <input type="number" id="gold_price_input" value="1">
               <div class="input-group-btn-vertical"> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
@@ -171,15 +209,15 @@
             </div>
             </div>
           </div>
-          <div class="stock_price panel panel-success"> 
-            <div class="panel-heading">
-              <img width="50" src="/images/ni_darrillium.png">
+          <div class="stock_price panel col-xs-6 col-sm-6 col-md-6"> 
+            <div class="panel-heading blue">
+              <!-- <img width="50" src="/images/ni_darrillium.png"> -->
               
-              <h3>Blue</h3>
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Blue</h3>
             </div>
             <div class="panel-body" >
             <div class="input-group spinner"> 
-              <input type="text" id="blue_price_input" value="1">
+              <input type="number" id="blue_price_input" value="1">
               <div class="input-group-btn-vertical"> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
@@ -187,15 +225,15 @@
             </div>
             </div>
           </div>
-          <div class="stock_price panel panel-success"> 
-            <div class="panel-heading">
-              <img width="50" src="/images/ni_nitronium.png">
+          <div class="stock_price panel col-xs-6 col-sm-6 col-md-6"> 
+            <div class="panel-heading orange">
+              <!-- <img width="50" src="/images/ni_nitronium.png"> -->
               
-              <h3>Orange</h3>
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Orange</h3>
             </div>
             <div class="panel-body" >
             <div class="input-group spinner"> 
-              <input type="text" id="orange_price_input" value="1">
+              <input type="number" id="orange_price_input" value="1">
               <div class="input-group-btn-vertical"> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
@@ -203,15 +241,15 @@
             </div>
             </div>
           </div>
-          <div class="stock_price panel panel-success"> 
-            <div class="panel-heading">
-              <img width="50" src="/images/ni_elerium.png">
+          <div class="stock_price panel col-xs-6 col-sm-6 col-md-6"> 
+            <div class="panel-heading green">
+              <!-- <img width="50" src="/images/ni_elerium.png"> -->
               
-              <h3>Green</h3>
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Green</h3>
             </div>
             <div class="panel-body" >
             <div class="input-group spinner"> 
-              <input type="text" id="green_price_input" value="1">
+              <input type="number" id="green_price_input" value="1">
               <div class="input-group-btn-vertical"> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
@@ -219,15 +257,15 @@
             </div>
             </div>
           </div>
-          <div class="stock_price panel panel-success"> 
-            <div class="panel-heading">
-              <img width="50" src="/images/ni_iron.png">
+          <div class="stock_price panel col-xs-6 col-sm-6 col-md-6"> 
+            <div class="panel-heading black">
+              <!-- <img width="50" src="/images/ni_iron.png"> -->
               
-              <h3>Black</h3>
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Black</h3>
             </div>
             <div class="panel-body" >
             <div class="input-group spinner"> 
-              <input type="text" id="black_price_input" value="1">
+              <input type="number" id="black_price_input" value="1">
               <div class="input-group-btn-vertical"> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
@@ -255,24 +293,24 @@
       </div>
       <div class="modal-body">
         <div class="row ">
-          <div class="player_info panel panel-success"> 
+          <div class="player_info panel col-xs-12 col-sm-12 col-md-12"> 
             <div class="panel-heading">
-              <h3>Name</h3>
+              <h3><i class="fa fa-user" aria-hidden="true"></i> Name</h3>
             </div>
             <div class="panel-body" >
               <input type="text" id="name_player_input">
             </div>
           </div>
 
-          <div class="player_info panel panel-success"> 
-            <div class="panel-heading">
-              <img width="50" src="/images/ni_currency.png">
+          <div class="player_info panel col-xs-6 col-sm-6 col-md-6"> 
+            <div class="panel-heading currency">
+              <!-- <img width="50" src="/images/ni_currency.png"> -->
               
-              <h3>Currency</h3>
+              <h3><i class="fa fa-money" aria-hidden="true"></i> Currency</h3>
             </div>
             <div class="panel-body" >
             <div class="input-group spinner"> 
-              <input type="text" id="currency_player_input" value="0">
+              <input type="number" id="currency_player_input" value="0">
               <div class="input-group-btn-vertical"> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
@@ -281,15 +319,15 @@
             </div>
           </div>
 
-          <div class="player_info panel panel-success"> 
-            <div class="panel-heading">
-              <img width="50" src="/images/ni_gold.png">
+          <div class="player_info panel col-xs-6 col-sm-6 col-md-6"> 
+            <div class="panel-heading gold">
+              <!-- <img width="50" src="/images/ni_gold.png"> -->
               
-              <h3>Gold</h3>
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Gold</h3>
             </div>
             <div class="panel-body" >
             <div class="input-group spinner"> 
-              <input type="text" id="gold_player_input" value="0">
+              <input type="number" id="gold_player_input" value="0">
               <div class="input-group-btn-vertical"> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
@@ -297,15 +335,15 @@
             </div>
             </div>
           </div>
-          <div class="player_info panel panel-success"> 
-            <div class="panel-heading">
-              <img width="50" src="/images/ni_darrillium.png">
+          <div class="player_info panel col-xs-6 col-sm-6 col-md-6"> 
+            <div class="panel-heading blue">
+              <!-- <img width="50" src="/images/ni_darrillium.png"> -->
               
-              <h3>Blue</h3>
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Blue</h3>
             </div>
             <div class="panel-body" >
             <div class="input-group spinner"> 
-              <input type="text" id="blue_player_input" value="0">
+              <input type="number" id="blue_player_input" value="0">
               <div class="input-group-btn-vertical"> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
@@ -313,15 +351,15 @@
             </div>
             </div>
           </div>
-          <div class="player_info panel panel-success"> 
-            <div class="panel-heading">
-              <img width="50" src="/images/ni_nitronium.png">
+          <div class="player_info panel col-xs-6 col-sm-6 col-md-6"> 
+            <div class="panel-heading orange">
+              <!-- <img width="50" src="/images/ni_nitronium.png"> -->
               
-              <h3>Orange</h3>
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Orange</h3>
             </div>
             <div class="panel-body" >
             <div class="input-group spinner"> 
-              <input type="text" id="orange_player_input" value="0">
+              <input type="number" id="orange_player_input" value="0">
               <div class="input-group-btn-vertical"> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
@@ -329,15 +367,15 @@
             </div> 
             </div>
           </div>
-          <div class="player_info panel panel-success"> 
-            <div class="panel-heading">
-              <img width="50" src="/images/ni_elerium.png">
+          <div class="player_info panel col-xs-6 col-sm-6 col-md-6"> 
+            <div class="panel-heading green">
+              <!-- <img width="50" src="/images/ni_elerium.png"> -->
               
-              <h3>Green</h3>
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Green</h3>
             </div>
             <div class="panel-body" >
             <div class="input-group spinner"> 
-              <input type="text" id="green_player_input" value="0">
+              <input type="number" id="green_player_input" value="0">
               <div class="input-group-btn-vertical"> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
@@ -345,15 +383,15 @@
             </div> 
             </div>
           </div>
-          <div class="player_info panel panel-success"> 
-            <div class="panel-heading">
-              <img width="50" src="/images/ni_iron.png">
+          <div class="player_info panel col-xs-6 col-sm-6 col-md-6"> 
+            <div class="panel-heading black">
+              <!-- <img width="50" src="/images/ni_iron.png"> -->
               
-              <h3>Black</h3>
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Black</h3>
             </div>
             <div class="panel-body" >
             <div class="input-group spinner"> 
-              <input type="text" id="black_player_input" value="0">
+              <input type="number" id="black_player_input" value="0">
               <div class="input-group-btn-vertical"> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-up"></i></a> 
                 <button class="btn btn-default" type="button" ><i class="fa fa-caret-down"></i></a> 
@@ -412,7 +450,7 @@ $('#modal--stock_price .modal-footer .btn').click(function(){
   function addPlayerScore(){
       html += '<tr class="players">';
       html += '<th class="player_name"><span class="name">'+$("#name_player_input").val()+'</span><span class="glyphicon glyphicon-pencil hidden" aria-hidden="true"></span></th>';
-      html += '<th class="currency" >'+$("#currency_player_input").val()+'</th>';
+      html += '<th class="currency_val" >'+$("#currency_player_input").val()+'</th>';
 
       for(var z=0,len=companies.length;z<len;z++){
         html += '<th colspan="1" class="'+companies[z]+'_shares">'+$("#"+companies[z]+"_player_input").val()+'</th>';
@@ -433,7 +471,7 @@ $('#modal--stock_price .modal-footer .btn').click(function(){
       var parent = $(this).parent().parent();
 
       $("#name_player_input").val( $(parent).find('.name').text() );
-      $("#currency_player_input").val( $(parent).find('.currency').text() );
+      $("#currency_player_input").val( $(parent).find('.currency_val').text() );
       
       for(var z=0,len=companies.length;z<len;z++){
         $("#"+companies[z]+"_player_input").val( $(parent).find('.'+companies[z]+'_shares').text() );
