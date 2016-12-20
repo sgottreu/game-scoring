@@ -416,21 +416,6 @@ $('#modal--stock_price .modal-footer .btn').click(function(){
     });
   }
 
-  $('.modal .spinner .btn:first-of-type').on('click', function() {
-    var spinner = $(this).parent().parent().find('input');
-    var val = parseInt($(spinner).val(), 10);
-    $(spinner).val(val+1);
-  });
-
-  $('.modal .spinner .btn:last-of-type').on('click', function() {
-    var spinner = $(this).parent().parent().find('input');
-    var val = parseInt($(spinner).val(), 10);
-    if(val > 0){
-      $(spinner).val(val-1);
-    }
-    
-  });
-
   $('#modal--player_add .modal-footer .btn').click(function(){   
     if(!existingPlayer){
       addPlayerScore();
