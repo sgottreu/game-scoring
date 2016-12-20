@@ -161,31 +161,32 @@ function calculateScore(game_id, vp){
   available_games.findOne({ "_id" : monk.id(game_id) }).then(function(game) {
     console.log('calculating Score');
 
-    if(game.completed == 0){
+    game.scoring = vp;
+
+    for ( var u in game.users ) {
+      if (game.users.hasOwnProperty(u)) {
+        game.users[u].vp = 0;
+      }
+    }
+
+    for(var x=0,len=companies.length;x<len;x++){
+      c = companies[x];
+      vp[ c ].vp = 0;
+      for ( var p in vp[ c ] ) {
+        if (vp[ c ].hasOwnProperty(p)) {
+          vp[ c ].vp += parseInt( vp[ c ][ p ] );
+        }
+      }
+      game.companies[ c ].vp = vp[ c ].vp;
+
       for ( var u in game.users ) {
         if (game.users.hasOwnProperty(u)) {
-          game.users[u].vp = 0;
+          game.users[u].vp += ( parseInt(game.companies[ c ].vp) * parseInt(game.users[u].companies[c].stocks_owned) );
         }
       }
-
-      for(var x=0,len=companies.length;x<len;x++){
-        c = companies[x];
-        vp[ c ].vp = 0;
-        for ( var p in vp[ c ] ) {
-          if (vp[ c ].hasOwnProperty(p)) {
-            vp[ c ].vp += parseInt( vp[ c ][ p ] );
-          }
-        }
-        game.companies[ c ].vp = vp[ c ].vp;
-
-        for ( var u in game.users ) {
-          if (game.users.hasOwnProperty(u)) {
-            game.users[u].vp += ( parseInt(game.companies[ c ].vp) * parseInt(game.users[u].companies[c].stocks_owned) );
-          }
-        }
-      }
-      game.completed = 1;
     }
+    game.completed = 1;
+
     for ( var u in game.users ) {
       if (game.users.hasOwnProperty(u)) {
         scores.push( game.users[u] );
@@ -228,7 +229,7 @@ function getNearbyGames(docs, game){
   var nearby = [], _id = game.game_oid;
 
   for(var x=0,len=docs.length;x<len;x++){
-    if(docs[x].distance <= 20 && docs[x].distance > -1){
+    if(docs[x].distance <= 20 && docs[x].distance > -1 ){ //&& docs[x].completed == 0
       nearby.push(docs[x]);
     } else {
       if(_id !== undefined){
@@ -618,7 +619,8 @@ function buildGameInstance(obj){
     num_players: obj.game.num_players,
     companies: {},
     creator: obj.user,
-    completed: 0
+    completed: 0,
+    scoring: {}
   };
 
   for(var x=0,len=companies.length;x<len;x++){
