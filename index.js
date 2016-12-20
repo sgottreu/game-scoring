@@ -229,8 +229,16 @@ function getNearbyGames(docs, game){
   var nearby = [], _id = game.game_oid;
 
   for(var x=0,len=docs.length;x<len;x++){
-    if(docs[x].distance <= 20 && docs[x].distance > -1 ){ //&& docs[x].completed == 0
-      nearby.push(docs[x]);
+    if(docs[x].distance <= 20 && docs[x].distance > -1){ //
+      if(docs[x].completed == 0){
+        nearby.push(docs[x]);
+      } else { // If url is used & game is complete
+        if(_id !== undefined){
+          if(_id == docs[x]._id){
+            nearby.push(docs[x]);
+          }
+        }
+      }
     } else {
       if(_id !== undefined){
         if(_id == docs[x]._id){
