@@ -1,213 +1,470 @@
+<!DOCTYPE html>
 <html>
-<head>
-<title>Tesla vs Edison Scoring App</title>
-  <meta name="viewport" content="initial-scale=1, maximum-scale=1">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-  <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+ <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tesla vs Edison - Scoring Meeples</title>
+
+<link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+<!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" crossorigin="anonymous"> -->
+<link rel="stylesheet" href="font-awesome.min.css" crossorigin="anonymous">
+
 <style>
-  body { background: #dec7a7; font-family: Roboto;}
-  input { font-size: 16px; width: 40px; text-align: center;}
+  body { font-family: Roboto;}
+  h2 { text-align: center; }
+
+/*  input { font-size: 16px; width: 40px; text-align: center;}*/
   .share_price { }
   .share_price input { width: 40px;}
   .name { width: 125px;}
-  .currency { width: 50px;}
+  .currency_val { width: 50px;}
   .score { width: 50px; }
-  table { border-collapse: collapse; border: 1px solid #000; margin: 0 auto; }
+/*  table { border-collapse: collapse; border: 1px solid #000; margin: 0 auto; }*/
   th, td { padding: 5px;}
   p { text-align: center;}
+
+  .header {
+    /*background: #34ade2; */
+  }
+  .messages {
+    width:90%;
+    margin: 10px auto;
+  }
+
+  table {
+    width: 300px !important;
+    margin: 0px auto  !important;
+  }
+
+/*  .edison { background-color: #FFD700; }
+  .tesla { background-color: #56B4BF; }
+  .brush { background-color: #FF8C00; }
+  .thomson { background-color: #57B873; color: #fff; }
+  .maxim { background-color: #6D5F5F; color: #fff; }
+  .currency { background-color: #966E4A;  color: #fff; }*/
+
+  .spinner {
+    display: block !important;
+  }
+  .input-group-btn-vertical {
+    display: none;
+  }
+
+  .glyphicon-pencil {
+    margin-left: 15px;
+  }
+
+.players .form-control {
+  width: 50px;
+}
+
+.modal-body .row {
+  margin: 0px !important;
+}
+
+#modal--stock_price h3, #modal--player_add h3 {
+  display: block;
+  text-align: center;
+}
+/*#modal--stock_price .panel, #modal--player_add .panel {
+  width: 90%;
+  margin: 10 auto;
+}*/
+
+#modal--stock_price .panel input, #modal--player_add .panel input {
+  width: 50px;
+  height: 40px;
+  font-size:24px;
+  text-align: center;
+  margin: 0 auto;
+  display: block;
+}
+
+#name_player_input {
+  width: 300px !important;
+  text-align: left !important;
+}
+
+.btn_stock_prices, .btn_player_scores {
+  text-align: center;
+  margin: 20px 0px;
+}
+
+.panel-primary {
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+  margin: 20px auto !important;
+  width: 90%;
+}
+
 </style>
 </head>
 <body>
+<h2>Tesla vs Edison</h2>
+<div class="messages"></div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th class="header">
+        <h3>Player</h3>
+      </th>
+      <th class="header">
+        <h3>Score</h3>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    
+  </tbody>
 
-<table border="1">
-  <tr>
-    <th colspan="7">
-      <img src="/images/tesla_vs_edison.png" width="400">
-    </th>
-  </tr>
-	<tr>
-    <th colspan="1">
-     Player Name
-    </th>
-    <th colspan="1">
-      Edison
-    </th>
-    <th colspan="1">
-      Tesla
-    </th>
-    <th colspan="1">
-      Brush
-    </th>
-    <th colspan="1">
-      Thomson
-    </th>
-    <th colspan="1">
-      Maxim
-    </th>
-    <th>
-      Score
-    </th>
-  </tr>
-  <tr class="share_price">
-    <th colspan="1">
-      
-    </th>
-    <th colspan="1">
-      <input type="number" id="edison_price" value="12">
-    </th>
-    <th colspan="1">
-      <input type="number" id="tesla_price" value="12">
-    </th>
-    <th colspan="1">
-      <input type="number" id="brush_price" value="12">
-    </th>
-    <th colspan="1">
-      <input type="number" id="thomson_price" value="12">
-    </th>
-    <th colspan="1">
-      <input type="number" id="maxim_price" value="12">
-    </th>
-    <th></th>
-  </tr>
-
-  <tr>
-    <th>
-      <input type="text" class="name">
-    </th>
-    <th colspan="1">
-      <input type="number" class="edison_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="tesla_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="brush_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="thomson_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="maxim_shares" value="0">
-    </th>
-    <th class="score">0</th>
-  </tr>
-  <tr>
-    <th>
-      <input type="text" class="name">
-    </th>
-
-    <th colspan="1">
-      <input type="number" class="edison_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="tesla_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="brush_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="thomson_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="maxim_shares" value="0">
-    </th>
-    <th class="score">0</th>
-  </tr>
-  <tr>
-    <th>
-      <input type="text" class="name">
-    </th>
-
-    <th colspan="1">
-      <input type="number" class="edison_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="tesla_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="brush_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="thomson_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="maxim_shares" value="0">
-    </th>
-    <th class="score">0</th>
-  </tr>
-  <tr>
-    <th>
-      <input type="text" class="name">
-    </th>
-
-    <th colspan="1">
-      <input type="number" class="edison_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="tesla_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="brush_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="thomson_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="maxim_shares" value="0">
-    </th>
-    <th class="score">0</th>
-  </tr>
-  <tr>
-    <th>
-      <input type="text" class="name">
-    </th>
-
-    <th colspan="1">
-      <input type="number" class="edison_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="tesla_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="brush_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="thomson_shares" value="0">
-    </th>
-    <th colspan="1">
-      <input type="number" class="maxim_shares" value="0">
-    </th>
-    <th class="score">0</th>
-  </tr>
 
 </table>
-<p>The share price for each stock goes in the top row. Then add the total shares for each player.</p>
+
+<div class="row ">
+  <div class="btn_stock_prices col-xs-12 col-sm-12 col-md-12"> 
+    <button type="button" class="btn btn-primary btnStockPrices " autocomplete="off"> 
+      Stock Prices
+    </button> 
+  </div>
+</div>
+<div class="row ">
+  <div class="btn_player_scores col-xs-12 col-sm-12 col-md-12"> 
+    <button type="button" class="btn btn-primary btnPlayerScores " autocomplete="off"> 
+      Player Scores
+    </button> 
+  </div>
+</div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="modal--stock_price">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Stock Prices</h4>
+        <h5></h5>
+      </div>
+      <div class="modal-body">
+        <div class="row ">
+          <div class="stock_price panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading edison">
+              <!-- <img width="50" src="/images/ni_edison.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Edison</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="edison_price_input" value="12">
+               
+            </div>
+            </div>
+          </div>
+        </div>
+        <div class="row ">
+          <div class="stock_price panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading tesla">
+              <!-- <img width="50" src="/images/ni_darrillium.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Tesla</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="tesla_price_input" value="12">
+               
+            </div>
+            </div>
+          </div>
+        </div>
+        <div class="row ">
+          <div class="stock_price panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading brush">
+              <!-- <img width="50" src="/images/ni_nitronium.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Brush</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="brush_price_input" value="12">
+               
+            </div>
+            </div>
+          </div>
+        </div>
+        <div class="row ">
+          <div class="stock_price panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading thomson">
+              <!-- <img width="50" src="/images/ni_elerium.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Thomson</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="thomson_price_input" value="12">
+               
+            </div>
+            </div>
+          </div>
+        </div>
+        <div class="row ">
+          <div class="stock_price panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading maxim">
+              <!-- <img width="50" src="/images/ni_iron.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Maxim</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="maxim_price_input" value="12">
+               
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Save</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<div class="modal fade" tabindex="-1" role="dialog" id="modal--player_add">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Player Score</h4>
+        <h5></h5>
+      </div>
+      <div class="modal-body">
+        <div class="row ">
+          <div class="player_info panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading">
+              <h3><i class="fa fa-user" aria-hidden="true"></i> Name</h3>
+            </div>
+            <div class="panel-body" >
+              <input type="text" id="name_player_input">
+            </div>
+          </div>
+        </div>
+
+        <div class="row ">
+          <div class="player_info panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading edison">
+              <!-- <img width="50" src="/images/ni_edison.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Edison</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="edison_player_input" value="0">
+               
+            </div>
+            </div>
+          </div>
+        </div>
+        <div class="row ">
+          <div class="player_info panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading tesla">
+              <!-- <img width="50" src="/images/ni_darrillium.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Tesla</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="tesla_player_input" value="0">
+               
+            </div>
+            </div>
+          </div>
+        </div>
+        <div class="row ">
+          <div class="player_info panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading brush">
+              <!-- <img width="50" src="/images/ni_nitronium.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Brush</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="brush_player_input" value="0">
+              
+            </div> 
+            </div>
+          </div>
+        </div>
+        <div class="row ">
+          <div class="player_info panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading thomson">
+              <!-- <img width="50" src="/images/ni_elerium.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Thomson</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="thomson_player_input" value="0">
+              
+            </div> 
+            </div>
+          </div>
+        </div>
+        <div class="row ">
+          <div class="player_info panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading maxim">
+              <!-- <img width="50" src="/images/ni_iron.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Maxim</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="maxim_player_input" value="0">
+               
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Save</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<input type="hidden" id="edison_price" >
+<input type="hidden" id="tesla_price" >
+<input type="hidden" id="brush_price" >
+<input type="hidden" id="thomson_price" >
+<input type="hidden" id="maxim_price" >
+
+<script src="https://code.jquery.com/jquery-3.1.0.min.js" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<!-- <p>The share modifiers for each stock go in the top row. Then add the currency & total shares for each player.</p> -->
 <script>
 (function($){
-  $("input[type='number']").blur(function(){
-    if($(this).val() == '' && $(this).attr("type") == "number") {
-      $(this).val(0);
-    }
-  });
+  var companies = ['edison', 'tesla', 'brush', 'thomson', 'maxim'];
+  var html = '';
 
-  $("input").keyup(function(e) {
-    if($(this).val() == '' && $(this).attr("type") == "number" && e.keyCode != 9 && e.keyCode != 8 && e.keyCode != 16) {
-      $(this).val(0);
-    } else {
-      if($(this).val() == '' && $(this).attr("type") == "number" && (e.keyCode == 9 || e.keyCode == 8 || e.keyCode == 16)) {
-        $(this).val(0);
-      }
+$(".btnStockPrices").click(function(){
+  $('#modal--stock_price').modal('toggle');
+
+});
+
+$('#modal--stock_price').modal({
+  show:false
+});
+
+
+$(".btnPlayerScores").click(function(){
+  if($("#edison_price").val() == ''){
+    var klass = 'messages';
+    $('.messages').prepend('<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>Please enter the stock prices first.</div>');
+
+    $('.messages .alert').fadeTo(2000, 500).slideUp(500, function(){
+      $('.message .alert').slideUp(500);
+      $('.messages .alert').remove();
+    });
+
+    return false;
+  }
+  $('#modal--player_add').modal('toggle');
+
+});
+
+$('#modal--player_add').modal({
+  show:false
+});
+
+$('#modal--stock_price .modal-footer .btn').click(function(){
+  $('#modal--stock_price').modal('toggle');
+  for(var z=0,len=companies.length;z<len;z++){
+    // $("#"+companies[z]+'_price').text( $("#"+companies[z]+'_price_input').val() );
+    $("#"+companies[z]+'_price').val( $("#"+companies[z]+'_price_input').val() );
+  }
+});
+
+  var existingPlayer = false;
+
+  function addPlayerScore(){
+    var player_id = guid();
+
+    var html = '<tr class="players">';
+    html += '<th class="player_name" data-guid="'+player_id+'"><span class="name">'+$("#name_player_input").val()+'</span><span class="glyphicon glyphicon-pencil " aria-hidden="true"></span></th>';
+   
+    html += '<th class="score" data-guid="'+player_id+'">0</th>';
+    html += '</tr>';
+
+    $('table tbody').append(html);
+
+    var html = '';
+
+    
+
+    html += '<input type="hidden" id="'+player_id+'_name" value="'+$("#name_player_input").val()+'">';
+
+    for(var z=0,len=companies.length;z<len;z++){
+      html += '<input type="hidden" id="'+player_id+'_'+companies[z]+'" class="'+companies[z]+'_shares" value="'+$("#"+companies[z]+"_player_input").val()+'">';
     }
+
+    $('body').append(html);
+
+    $(".glyphicon-pencil").on('click', function(e){
+      var player_id = $(this).parent().data('guid');
+
+      $("#name_player_input").val( $("#"+player_id+'_name').val() );
+      
+      for(var z=0,len=companies.length;z<len;z++){
+        $("#"+companies[z]+"_player_input").val( $("#"+player_id+'_'+companies[z]).val() );
+      }
+
+      $('#modal--player_add').modal('toggle');
+      existingPlayer = true;
+    });
+  }
+
+  $('#modal--player_add .modal-footer .btn').click(function(){   
+    if(!existingPlayer){
+      addPlayerScore();
+    }
+
+    existingPlayer = false;
+
     $(".score").each(function(i, value) {
-      var score = ( parseInt($(".edison_shares")[i].value) * parseInt($("#edison_price").val() ) ) +      
-          ( parseInt($(".tesla_shares")[i].value) * parseInt($("#tesla_price").val()) )  + 
-          ( parseInt($(".brush_shares")[i].value) * parseInt($("#brush_price").val()) )  +    
-          ( parseInt($(".thomson_shares")[i].value) * parseInt($("#thomson_price").val()) )  + 
-          ( parseInt($(".maxim_shares")[i].value) * parseInt($("#maxim_price").val()) ) ;
+      var score = ( parseInt($("#edison_player_input").val()) * parseInt($("#edison_price").val() ) ) +      
+          ( parseInt($("#tesla_player_input").val()) * parseInt($("#tesla_price").val()) )  + 
+          ( parseInt($("#brush_player_input").val()) * parseInt($("#brush_price").val()) )  +    
+          ( parseInt($("#thomson_player_input").val()) * parseInt($("#thomson_price").val()) )  + 
+          ( parseInt($("#maxim_player_input").val()) * parseInt($("#maxim_price").val()) ) ;
 
       $(".score")[i].innerHTML = (score);       
     });
+    $('#modal--player_add').modal('toggle');
+
+    $("#name_player_input").val('');
+
+    $("#edison_player_input").val(0);     
+    $("#tesla_player_input").val(0);
+    $("#brush_player_input").val(0);  
+    $("#thomson_player_input").val(0);
+    $("#maxim_player_input").val(0);
   });
+
+  function guid() {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+      s4() + '-' + s4() + s4() + s4();
+  }
 
 })(jQuery);
 </script>
