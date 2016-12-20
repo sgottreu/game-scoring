@@ -75,7 +75,7 @@ $( document ).ready(function() {
     });
   })
 
-  $("#modal--username .modal-footer button").click(function(event){
+  $("#modal--username .modal-footer .btn-primary").click(function(event){
     var _id = $('.available_games_dd .dropdown.selected a').data('oid');
     var numplayers = $('.num_players .dropdown.selected a').data('numplayers');
 
@@ -222,6 +222,11 @@ $( document ).ready(function() {
     removeBackdrop();
   });
 
+  $("#modal--username .btn-warning").click(function(){
+    $("#available_games_dd").append('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span>');
+    socket.emit('available_games', {name: game_name, location: {lat: 0, lon: 0 }, game_oid: game_oid, email: $("#email").val() }); 
+  });
+
   $('.modal .spinner .btn:first-of-type').on('click', function() {
     var spinner = $(this).parent().parent().find('input');
     var action = $(this).data('action');
@@ -303,10 +308,6 @@ $( document ).ready(function() {
     var bolValid = true;
 
     if(action == "stock_value"){
-      // if($('.purchase_price input').val() > user_treasuries[player]){
-      //   alert_msg('modal-body', 'There is not enough money in the player\'s treasury.');
-      //   bolValid = false;
-      // }
       if( parseInt( $(spinner).val()) < 10 || parseInt( $(spinner).val()) > 50){
         alert_msg('modal-body', 'This is not a valid opening stock value.');
         bolValid = false;
@@ -830,7 +831,11 @@ $( document ).ready(function() {
     for(var x=0,len=games.length;x<len;x++){
       html += '<li role="presentation" class="dropdown">';
       html += '<a href="#" class="dropdown-toggle" id="'+games[x]._id+'" data-creator="'+games[x].creator.name+'" data-oid="'+games[x]._id+'" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">';
-      html += games[x].creator.name+' - Distance: '+games[x].distance+'; Date: '+games[x].date;
+      html += 'Creator: '+games[x].creator.name;
+      if(games[x].distance > -1){
+        html += ' - Distance: '+games[x].distance;
+      }
+      html += '; Date: '+games[x].date;
       html += '</a></li>';
 
       game_found = (game_oid !== undefined && game_oid == games[x]._id) ? true : game_found;
@@ -842,6 +847,10 @@ $( document ).ready(function() {
 
     if(game_oid !== undefined && game_found){
       preselectGameInstance(game_oid);
+    }
+
+    if(games.length == 0){
+      $("#modal--username .btn-warning").toggleClass("hidden");
     }
 
     if(game_oid !== undefined && !game_found){
