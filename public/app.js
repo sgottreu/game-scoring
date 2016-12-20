@@ -767,13 +767,13 @@ $( document ).ready(function() {
     waiting.get_players = false;
   }
 
-  function updateRound(round){
+  function updateRound(round, scoring){
     current_round = round;
     if(round <= 8){
       $(".current_round").text(round);
     } else {
       $(".current_round").parent().html('End of Game');
-      victoryPointForm();
+      victoryPointForm(scoring);
     }
   }
 
@@ -782,7 +782,7 @@ $( document ).ready(function() {
     $('.modal-body .alert').remove();
   }
 
-  function victoryPointForm(){
+  function victoryPointForm(scoring){
     var html, val, disabled = false;
     for(var x=0,len=companies.length;x<len;x++){
       html = '<div class="col-xs-12 col-md-12 hidden vp_company vp_'+companies[x]+'">';
@@ -798,6 +798,10 @@ $( document ).ready(function() {
 
     $(".vp_no_stock").prop('disabled', true);
 
+    if(Object.keys(scoring).length > 0){
+      populateCompanyScoring(scoring);
+    }
+    
     $(".vp_chk_bx").on('click', function(e){
       var vp_key, key, company, index;
       var vp_vals = victory_point_values;
@@ -826,7 +830,7 @@ $( document ).ready(function() {
     for(var x=0,len=games.length;x<len;x++){
       html += '<li role="presentation" class="dropdown">';
       html += '<a href="#" class="dropdown-toggle" id="'+games[x]._id+'" data-creator="'+games[x].creator.name+'" data-oid="'+games[x]._id+'" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">';
-      html += games[x].creator.name+' - Dist: '+games[x].distance;
+      html += games[x].creator.name+' - Distance: '+games[x].distance+'; Date: '+games[x].date;
       html += '</a></li>';
 
       game_found = (game_oid !== undefined && game_oid == games[x]._id) ? true : game_found;
@@ -851,7 +855,7 @@ $( document ).ready(function() {
     log_actions(msg.newest_user+' has joined the game');
 
     addPlayerDividends(msg.users);
-    updateRound(msg.current_round);
+    updateRound(msg.current_round, msg.scoring);
 
     if( msg.newest_user == user && $(".player_block.active").length > 0){
       socket.emit('get_player_totals', { game_oid: game_oid, user: user });
@@ -919,7 +923,7 @@ $( document ).ready(function() {
     if($(".company_pane .btn.active").length > 0){
       socket.emit('get_company', { game_oid: game_oid, company_name: $(".company_pane .btn.active").text().toLowerCase() });
     }
-    updateRound(obj.current_round);
+    updateRound(obj.current_round, obj.scoring);
     
     if(obj.current_round > 8){
       $(".purchaseCompanyStock").addClass('hidden');
@@ -983,6 +987,20 @@ $( document ).ready(function() {
       $(".player_stocks .panel-body").html(html);
     });
 
+  }
+
+  function populateCompanyScoring(scoring){
+    for (var c in scoring) {
+      if (scoring.hasOwnProperty(c)) {
+        for (var s in scoring[c]) {
+          if (scoring[c].hasOwnProperty(s)) {
+            if(scoring[c][s] > 0){
+              $("#"+s+'_'+c).prop('checked', true);
+            }
+          }
+        }
+      }
+    }
   }
 
   function inArray(needle, haystack) {
