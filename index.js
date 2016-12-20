@@ -217,7 +217,7 @@ function emitAvailableGames(io, game){
     for(var x=0,len=docs.length;x<len;x++){
 			docs[x] = setGameAttrib(docs[x], game._id, game.location);
 		}
-    docs = getNearbyGames(docs, game);
+    docs = (game.email !== undefined) ? getGamesByEmail(docs, game) : getNearbyGames(docs, game);
 
   	io.emit('available_games', docs);
   });
@@ -248,6 +248,25 @@ function getNearbyGames(docs, game){
       }
     }
   }
+  return nearby;
+}
+
+function getGamesByEmail(docs, game){
+  docs.sort(compareDistance);
+
+  var nearby = [], _id = game.game_oid, email = game.email;
+
+  for(var x=0,len=docs.length;x<len;x++){
+    for ( var u in docs[x].users ) {
+      if (docs[x].users.hasOwnProperty(u)) {
+        docs[x].distance = -1;
+        if(docs[x].users[u].email == game.email){
+          nearby.push(docs[x]);
+        } 
+      }
+    }
+  }
+
   return nearby;
 }
 
