@@ -227,10 +227,12 @@ function getNearbyGames(docs, game){
   docs.sort(compareDistance);
 
   var nearby = [], _id = game.game_oid;
+  var past_date = moment().subtract(7, 'days').format('YYYY-MM-DD');
 
   for(var x=0,len=docs.length;x<len;x++){
     if(docs[x].distance <= 20 && docs[x].distance > -1){ //
-      if(docs[x].completed == 0){
+
+      if(docs[x].completed == 0  && moment(docs[x]._date).isAfter(past_date)){
         nearby.push(docs[x]);
       } else { // If url is used & game is complete
         if(_id !== undefined){
@@ -255,12 +257,13 @@ function getGamesByEmail(docs, game){
   docs.sort(compareDistance);
 
   var nearby = [], _id = game.game_oid, email = game.email;
+  var past_date = moment().subtract(7, 'days').format('YYYY-MM-DD');
 
   for(var x=0,len=docs.length;x<len;x++){
     for ( var u in docs[x].users ) {
       if (docs[x].users.hasOwnProperty(u)) {
         docs[x].distance = -1;
-        if(docs[x].users[u].email == game.email){
+        if( docs[x].users[u].email == game.email && moment(docs[x]._date).isAfter(past_date) ){
           nearby.push(docs[x]);
         } 
       }
@@ -434,6 +437,7 @@ function savePlayerDividends(obj){
 
 function setGameAttrib(game, _id, location, user){
   game.date = moment(game._id.getTimestamp()).format("MM/DD/YYYY");
+  game._date = moment(game._id.getTimestamp());
   game.selected = (_id !== undefined && _id.toString() == game._id.toString()) ? true : false;
   if(user !== undefined){
     game.newest_user = keyify(user.tag);
