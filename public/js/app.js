@@ -850,7 +850,9 @@ $( document ).ready(function() {
     }
 
     if(games.length == 0){
-      $("#modal--username .btn-warning").toggleClass("hidden");
+      $("#modal--username .btn-warning").removeClass("hidden");
+    } else {
+      $("#modal--username .btn-warning").addClass("hidden");
     }
 
     if(game_oid !== undefined && !game_found){
