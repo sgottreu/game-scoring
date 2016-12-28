@@ -1,0 +1,17 @@
+.bgg {
+  margin-top: 50px;
+}
+
+.bgg a {
+  text-decoration: none;
+}
+
+.btn-info {
+  margin: 0px auto;
+  display: block;
+}
+
+.btn-info img{
+  margin-right:10px; 
+  width:55px;
+}
