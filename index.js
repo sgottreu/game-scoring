@@ -54,6 +54,10 @@ app.get('/tesla', function(req, res){
   res.sendFile(__dirname + '/public/tesla.html');
 });
 
+app.get('/shipyard', function(req, res){
+  res.sendFile(__dirname + '/public/shipyard.html');
+});
+
 app.get('/game/:game_id', function(req, res){
   var game_id = req.params.game_id;
   res.redirect('/continental_divide.html?gameid='+game_id);

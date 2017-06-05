@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html>
+ <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Shipyard - Scoring Meeples</title>
+
+<link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+<!-- <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" crossorigin="anonymous"> -->
+<link rel="stylesheet" href="/styles/font-awesome.min.css" crossorigin="anonymous">
+<link rel="stylesheet" href="/styles/generic.css" >
+<style>
+  body { font-family: Roboto;}
+  h2 { text-align: center; }
+
+/*  input { font-size: 16px; width: 40px; text-align: center;}*/
+  .share_price { }
+  .share_price input { width: 40px;}
+  .name { width: 125px;}
+  .currency_val { width: 50px;}
+  .score { width: 50px; }
+/*  table { border-collapse: collapse; border: 1px solid #000; margin: 0 auto; }*/
+  th, td { padding: 5px;}
+  p { text-align: center;}
+
+  .header {
+    /*background: #34ade2; */
+  }
+  .messages {
+    width:90%;
+    margin: 10px auto;
+  }
+
+  table {
+    width: 300px !important;
+    margin: 0px auto  !important;
+  }
+
+/*  .edison { background-color: #FFD700; }
+  .tesla { background-color: #56B4BF; }
+  .brush { background-color: #FF8C00; }
+  .thomson { background-color: #57B873; color: #fff; }
+  .maxim { background-color: #6D5F5F; color: #fff; }
+  .currency { background-color: #966E4A;  color: #fff; }*/
+
+  .spinner {
+    display: block !important;
+  }
+  .input-group-btn-vertical {
+    display: none;
+  }
+
+  .glyphicon-pencil {
+    margin-left: 15px;
+  }
+
+.players .form-control {
+  width: 50px;
+}
+
+.modal-body .row {
+  margin: 0px !important;
+}
+
+#modal--stock_price h3, #modal--player_add h3 {
+  display: block;
+  text-align: center;
+}
+/*#modal--stock_price .panel, #modal--player_add .panel {
+  width: 90%;
+  margin: 10 auto;
+}*/
+
+#modal--stock_price .panel input, #modal--player_add .panel input {
+  width: 50px;
+  height: 40px;
+  font-size:24px;
+  text-align: center;
+  margin: 0 auto;
+  display: block;
+}
+
+#name_player_input {
+  width: 300px !important;
+  text-align: left !important;
+}
+
+.btn_stock_prices, .btn_player_scores {
+  text-align: center;
+  margin: 20px 0px;
+}
+
+.panel-primary {
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+  margin: 20px auto !important;
+  width: 90%;
+}
+
+
+
+</style>
+</head>
+<body>
+<h2>Shipyard</h2>
+<div class="messages"></div>
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th class="header">
+        <h3>Player</h3>
+      </th>
+      <th class="header">
+        <h3>Score</h3>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    
+  </tbody>
+</table>
+
+<div class="row ">
+  <div class="btn_stock_prices col-xs-12 col-sm-12 col-md-12"> 
+    <button type="button" class="btn btn-primary btnPlayers " autocomplete="off"> 
+      Add Players
+    </button> 
+  </div>
+</div>
+
+<div class="row ">
+  <div class="btn_stock_prices col-xs-12 col-sm-12 col-md-12"> 
+    <button type="button" class="btn btn-primary btnStockPrices " autocomplete="off"> 
+      Stock Prices
+    </button> 
+  </div>
+</div>
+<div class="row ">
+  <div class="btn_player_scores col-xs-12 col-sm-12 col-md-12"> 
+    <button type="button" class="btn btn-primary btnPlayerScores " autocomplete="off"> 
+      Player Scores
+    </button> 
+  </div>
+</div>
+
+<div class="bgg">
+  <a href="https://boardgamegeek.com/boardgame/55600/shipyard" target="_blank">
+    <button class="btn btn-info">
+      <img src="https://cf.geekdo-static.com/images/geekfacebook.png" >Log Play on BBG
+    </button>
+  </a>
+</div>
+
+<div class="modal fade" tabindex="-1" role="dialog" id="modal--players">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Players</h4>
+        <h5></h5>
+      </div>
+      <div class="modal-body">
+        <div class="row ">
+          <div class=" col-xs-12 col-sm-12 col-md-12"> 
+            <label>Player #1:</label>
+            <input type="text" id="player1" value="">
+          </div>
+        </div>
+        <div class="row ">
+          <div class=" col-xs-12 col-sm-12 col-md-12"> 
+            <label>Player #2:</label>
+            <input type="text" id="player2" value="">
+          </div>
+        </div>
+        <div class="row ">
+          <div class=" col-xs-12 col-sm-12 col-md-12"> 
+            <label>Player #3:</label>
+            <input type="text" id="player3" value="">
+          </div>
+        </div>
+        <div class="row ">
+          <div class=" col-xs-12 col-sm-12 col-md-12"> 
+            <label>Player #4:</label>
+            <input type="text" id="player4" value="">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Save</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+
+<div class="modal fade" tabindex="-1" role="dialog" id="modal--player_add">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        <h4 class="modal-title">Player Score</h4>
+        <h5></h5>
+      </div>
+      <div class="modal-body">
+        <div class="row ">
+          <div class="player_info panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading">
+              <h3><i class="fa fa-user" aria-hidden="true"></i> Name</h3>
+            </div>
+            <div class="panel-body" >
+              <input type="text" id="name_player_input">
+            </div>
+          </div>
+        </div>
+
+        <div class="row ">
+          <div class="player_info panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading edison">
+              <!-- <img width="50" src="/images/ni_edison.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Edison</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="edison_player_input" value="0">
+               
+            </div>
+            </div>
+          </div>
+        </div>
+        <div class="row ">
+          <div class="player_info panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading tesla">
+              <!-- <img width="50" src="/images/ni_darrillium.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Tesla</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="tesla_player_input" value="0">
+               
+            </div>
+            </div>
+          </div>
+        </div>
+        <div class="row ">
+          <div class="player_info panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading brush">
+              <!-- <img width="50" src="/images/ni_nitronium.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Brush</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="brush_player_input" value="0">
+              
+            </div> 
+            </div>
+          </div>
+        </div>
+        <div class="row ">
+          <div class="player_info panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading thomson">
+              <!-- <img width="50" src="/images/ni_elerium.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Thomson</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="thomson_player_input" value="0">
+              
+            </div> 
+            </div>
+          </div>
+        </div>
+        <div class="row ">
+          <div class="player_info panel panel-primary col-xs-12 col-sm-12 col-md-12"> 
+            <div class="panel-heading maxim">
+              <!-- <img width="50" src="/images/ni_iron.png"> -->
+              
+              <h3><i class="fa fa-line-chart" aria-hidden="true"></i> Maxim</h3>
+            </div>
+            <div class="panel-body" >
+            <div class="input-group spinner"> 
+              <input type="number" id="maxim_player_input" value="0">
+               
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Save</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<input type="hidden" id="edison_price" >
+<input type="hidden" id="tesla_price" >
+<input type="hidden" id="brush_price" >
+<input type="hidden" id="thomson_price" >
+<input type="hidden" id="maxim_price" >
+
+<script src="https://code.jquery.com/jquery-3.1.0.min.js" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<!-- <p>The share modifiers for each stock go in the top row. Then add the currency & total shares for each player.</p> -->
+<script>
+(function($){
+  
+  var html = '';
+
+  var game = JSON.parse(localStorage.getItem("scoring_meeples--game_shipyard"));
+
+  game = (game === null) ? { players: [] } : game;
+
+  function setState(game){
+    localStorage.setItem("scoring_meeples--game_shipyard", JSON.stringify(game) );
+  }
+
+  $(".btnPlayers").click(function(){
+    $('#modal--players').modal('toggle');
+  });
+
+  $('#modal--players').modal({
+    show:false
+  });
+
+  $('#modal--players .modal-footer .btn').click(function(){
+    $('#modal--players').modal('toggle');
+    for(var z=1;z<5;z++){
+      game.players[z-1] = { name: $("#player"+z).val(), score: 0 }; 
+    }
+    setState(game);
+  });
+
+$(".btnPlayerScores").click(function(){
+  if($("#edison_price").val() == ''){
+    var klass = 'messages';
+    $('.messages').prepend('<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>Please enter the stock prices first.</div>');
+
+    $('.messages .alert').fadeTo(2000, 500).slideUp(500, function(){
+      $('.message .alert').slideUp(500);
+      $('.messages .alert').remove();
+    });
+
+    return false;
+  }
+  $('#modal--player_add').modal('toggle');
+
+});
+
+$('#modal--player_add').modal({
+  show:false
+});
+
+
+
+  var existingPlayer = false;
+
+  function addPlayerScore(){
+    var player_id = guid();
+
+    var html = '<tr class="players">';
+    html += '<th class="player_name" data-guid="'+player_id+'"><span class="name">'+$("#name_player_input").val()+'</span><span class="glyphicon glyphicon-pencil " aria-hidden="true"></span></th>';
+   
+    html += '<th class="score" data-guid="'+player_id+'">0</th>';
+    html += '</tr>';
+
+    $('table tbody').append(html);
+
+    var html = '';
+
+    
+
+    html += '<input type="hidden" id="'+player_id+'_name" value="'+$("#name_player_input").val()+'">';
+
+    for(var z=0,len=companies.length;z<len;z++){
+      html += '<input type="hidden" id="'+player_id+'_'+companies[z]+'" class="'+companies[z]+'_shares" value="'+$("#"+companies[z]+"_player_input").val()+'">';
+    }
+
+    $('body').append(html);
+
+    $(".glyphicon-pencil").on('click', function(e){
+      var player_id = $(this).parent().data('guid');
+
+      $("#name_player_input").val( $("#"+player_id+'_name').val() );
+      
+      for(var z=0,len=companies.length;z<len;z++){
+        $("#"+companies[z]+"_player_input").val( $("#"+player_id+'_'+companies[z]).val() );
+      }
+
+      $('#modal--player_add').modal('toggle');
+      existingPlayer = true;
+    });
+  }
+
+  $('#modal--player_add .modal-footer .btn').click(function(){   
+    if(!existingPlayer){
+      addPlayerScore();
+    }
+
+    existingPlayer = false;
+
+    $(".score").each(function(i, value) {
+      var score = ( parseInt($("#edison_player_input").val()) * parseInt($("#edison_price").val() ) ) +      
+          ( parseInt($("#tesla_player_input").val()) * parseInt($("#tesla_price").val()) )  + 
+          ( parseInt($("#brush_player_input").val()) * parseInt($("#brush_price").val()) )  +    
+          ( parseInt($("#thomson_player_input").val()) * parseInt($("#thomson_price").val()) )  + 
+          ( parseInt($("#maxim_player_input").val()) * parseInt($("#maxim_price").val()) ) ;
+
+      $(".score")[i].innerHTML = (score);       
+    });
+    $('#modal--player_add').modal('toggle');
+
+    $("#name_player_input").val('');
+
+    $("#edison_player_input").val(0);     
+    $("#tesla_player_input").val(0);
+    $("#brush_player_input").val(0);  
+    $("#thomson_player_input").val(0);
+    $("#maxim_player_input").val(0);
+  });
+
+  function guid() {
+    function s4() {
+      return Math.floor((1 + Math.random()) * 0x10000)
+        .toString(16)
+        .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+      s4() + '-' + s4() + s4() + s4();
+  }
+
+})(jQuery);
+</script>
+
+</body>
+</html>
