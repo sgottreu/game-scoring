@@ -78,4 +78,23 @@
   line-height: 24px !important;
 }
 
- 
+.resource .name {
+  line-height: 24px;
+  color: rgba(0, 0, 0, 0.87);
+  padding-left: 30px;
+  font-size: 24px;
+  width: 155px ;
+  display: inline-block;
+}
+
+.resource .buySell {
+  width: 100px !important;
+  display: inline-block !important;
+  margin-left: 40px;
+}
+
+.resource label.sell {
+  line-height: 24px;
+  color: rgba(0, 0, 0, 0.87);
+  padding-left: 30px;
+}
