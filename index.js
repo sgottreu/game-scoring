@@ -16,6 +16,8 @@ var mongodb_config = (process.env.mongodb) ? process.env.mongodb : process.argv[
 var mongo_url = 'mongodb://'+mongodb_config;
 var db = monk(mongo_url);
 
+app.use(morgan('combined'));
+
 var nsp_socket = [];
 
 var companies = ['blue','red', 'yellow', 'pink', 'green', 'brown', 'purple', 'black'];
@@ -56,6 +58,26 @@ app.get('/tesla', function(req, res){
 
 app.get('/shipyard', function(req, res){
   res.sendFile(__dirname + '/public/shipyard.html');
+});
+
+app.get('/game/masters_venice', function(req, res){
+  res.sendFile(__dirname + '/lib/masters_of_venice/build/index.html');
+});
+
+app.get('/static/*', function(req, res){
+  console.log(req.url);
+  if(/masters_venice/.test(req.headers.referer)){
+    console.log('found');
+  }
+  res.sendFile(__dirname + '/lib/masters_of_venice/build'+req.url);
+});
+
+app.get('/css/font-awesome/*', function(req, res){
+  console.log(req.url);
+  if(/masters_venice/.test(req.headers.referer)){
+    console.log('found');
+  }
+  res.sendFile(__dirname + '/lib/masters_of_venice/build'+req.url);
 });
 
 app.get('/game/:game_id', function(req, res){
