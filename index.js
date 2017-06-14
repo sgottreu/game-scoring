@@ -60,24 +60,8 @@ app.get('/shipyard', function(req, res){
   res.sendFile(__dirname + '/public/shipyard.html');
 });
 
-app.get('/game/masters_venice', function(req, res){
-  res.sendFile(__dirname + '/lib/masters_of_venice/build/index.html');
-});
-
-app.get('/static/*', function(req, res){
-  console.log(req.url);
-  if(/masters_venice/.test(req.headers.referer)){
-    console.log('found');
-  }
-  res.sendFile(__dirname + '/lib/masters_of_venice/build'+req.url);
-});
-
-app.get('/css/font-awesome/*', function(req, res){
-  console.log(req.url);
-  if(/masters_venice/.test(req.headers.referer)){
-    console.log('found');
-  }
-  res.sendFile(__dirname + '/lib/masters_of_venice/build'+req.url);
+app.get('/masters_of_venice', function(req, res){
+  res.sendFile(__dirname + '/public/masters_of_venice/index.html');
 });
 
 app.get('/game/:game_id', function(req, res){
