@@ -9,6 +9,11 @@
   color: white;
 }
 
+.resetApp {
+  position: absolute;
+  bottom: 10px;
+  left: 20px;
+}
 
 .hide {
   display: none !important;
@@ -22,6 +27,12 @@
 .ShopModal .stats {
   display: flex;
   flex-wrap: wrap;
+}
+
+.shopListings {
+  display: flex; 
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .shopListings .paperCube {
@@ -104,7 +115,15 @@
 .radioBtns {
   display: inline-flex;
   margin-left: 30px;
+  position: relative;
+  top: 5px;
 }
+
+
+.ActionModal h3 {
+  padding-bottom: 5px !important;
+}
+
 
 
 .actionMsg {
