@@ -347,118 +347,145 @@
   </div><!-- /.modal-dialog -->
 </div><!-- /.modal -->
 
-<input type="hidden" id="edison_price" >
-<input type="hidden" id="tesla_price" >
-<input type="hidden" id="brush_price" >
-<input type="hidden" id="thomson_price" >
-<input type="hidden" id="maxim_price" >
 
 <script src="https://code.jquery.com/jquery-3.1.0.min.js" crossorigin="anonymous"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
 <!-- <p>The share modifiers for each stock go in the top row. Then add the currency & total shares for each player.</p> -->
 <script>
+
+var clone = function(data){
+  return (data === undefined) ? {} : JSON.parse(JSON.stringify(data));
+}
+
+  var player = { id: false, name: false, score: 0, currency: 0, stocks: [
+    {name:'edison', quantity: 0},
+    {name:'tesla', quantity: 0},
+    {name:'brush', quantity: 0},
+    {name:'thomson', quantity: 0},
+    {name:'maxim', quantity: 0}
+  ]};
+
+
 (function($){
-  var companies = ['edison', 'tesla', 'brush', 'thomson', 'maxim'];
+  var companies = [
+    {name:'edison', price: 1},
+    {name:'tesla', price: 1},
+    {name:'brush', price: 1},
+    {name:'thomson', price: 1},
+    {name:'maxim', price: 1}
+  ];
   var html = '';
+  var players = [];
 
-$(".btnStockPrices").click(function(){
-  $('#modal--stock_price').modal('toggle');
+  $(".btnStockPrices").click(function(){
+    $('#modal--stock_price').modal('toggle');
 
-});
+  });
 
-$('#modal--stock_price').modal({
-  show:false
-});
+  $('#modal--stock_price').modal({
+    show:false
+  });
 
 
-$(".btnPlayerScores").click(function(){
-  if($("#edison_price").val() == ''){
-    var klass = 'messages';
-    $('.messages').prepend('<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>Please enter the stock prices first.</div>');
+  $(".btnPlayerScores").click(function(){
+    if($("#edison_price").val() == ''){
+      var klass = 'messages';
+      $('.messages').prepend('<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>Please enter the stock prices first.</div>');
 
-    $('.messages .alert').fadeTo(2000, 500).slideUp(500, function(){
-      $('.message .alert').slideUp(500);
-      $('.messages .alert').remove();
-    });
+      $('.messages .alert').fadeTo(2000, 500).slideUp(500, function(){
+        $('.message .alert').slideUp(500);
+        $('.messages .alert').remove();
+      });
 
-    return false;
-  }
-  $('#modal--player_add').modal('toggle');
+      return false;
+    }
+    $('#modal--player_add').modal('toggle');
 
-});
+  });
 
-$('#modal--player_add').modal({
-  show:false
-});
+  $('#modal--player_add').modal({
+    show:false
+  });
 
-$('#modal--stock_price .modal-footer .btn').click(function(){
-  $('#modal--stock_price').modal('toggle');
-  for(var z=0,len=companies.length;z<len;z++){
-    // $("#"+companies[z]+'_price').text( $("#"+companies[z]+'_price_input').val() );
-    $("#"+companies[z]+'_price').val( $("#"+companies[z]+'_price_input').val() );
-  }
-});
+  $('#modal--stock_price .modal-footer .btn').click(function(){
+    $('#modal--stock_price').modal('toggle');
+    for(var z=0,len=companies.length;z<len;z++){
+      companies[z].price = parseInt( $("#"+companies[z].name+'_price_input').val() );
+    }
+  });
 
   var existingPlayer = false;
 
   function addPlayerScore(){
-    var player_id = guid();
+    var _player = clone(player);
+    _player.id = guid();
 
     var html = '<tr class="players">';
-    html += '<th class="player_name" data-guid="'+player_id+'"><span class="name">'+$("#name_player_input").val()+'</span><span class="glyphicon glyphicon-pencil " aria-hidden="true"></span></th>';
+    html += '<th class="player_name" data-guid="'+_player.id+'"><span class="name">'+$("#name_player_input").val()+'</span><span class="glyphicon glyphicon-pencil " aria-hidden="true"></span></th>';
    
-    html += '<th class="score" data-guid="'+player_id+'">0</th>';
+    html += '<th class="score" data-guid="'+_player.id+'">0</th>';
     html += '</tr>';
 
     $('table tbody').append(html);
 
-    var html = '';
-
-    
-
-    html += '<input type="hidden" id="'+player_id+'_name" value="'+$("#name_player_input").val()+'">';
-
-    for(var z=0,len=companies.length;z<len;z++){
-      html += '<input type="hidden" id="'+player_id+'_'+companies[z]+'" class="'+companies[z]+'_shares" value="'+$("#"+companies[z]+"_player_input").val()+'">';
-    }
-
-    $('body').append(html);
+    players.push(_player);
 
     $(".glyphicon-pencil").on('click', function(e){
       var player_id = $(this).parent().data('guid');
 
-      $("#name_player_input").val( $("#"+player_id+'_name').val() );
+      var _player = players.find(function(p) {
+        return p.id === player_id;
+      });
+
+      if(_player === undefined) {
+        _player = clone(player);
+      }
+
+      $("#name_player_input").val( _player.name );
+      $("#currency_player_input").val( _player.currency );
       
+      var c;
       for(var z=0,len=companies.length;z<len;z++){
-        $("#"+companies[z]+"_player_input").val( $("#"+player_id+'_'+companies[z]).val() );
+        c = companies[z];
+        $("#"+c.name+"_player_input").val( _player.stocks[ z ].quantity );
       }
 
       $('#modal--player_add').modal('toggle');
-      existingPlayer = true;
+      existingPlayer = player_id;
     });
+
+    return _player.id;
   }
 
   $('#modal--player_add .modal-footer .btn').click(function(){   
+    var player_id = existingPlayer;
+    
     if(!existingPlayer){
-      addPlayerScore();
+      player_id = addPlayerScore();
     }
 
     existingPlayer = false;
 
-    $(".score").each(function(i, value) {
-      var score = ( parseInt($("#edison_player_input").val()) * parseInt($("#edison_price").val() ) ) +      
-          ( parseInt($("#tesla_player_input").val()) * parseInt($("#tesla_price").val()) )  + 
-          ( parseInt($("#brush_player_input").val()) * parseInt($("#brush_price").val()) )  +    
-          ( parseInt($("#thomson_player_input").val()) * parseInt($("#thomson_price").val()) )  + 
-          ( parseInt($("#maxim_player_input").val()) * parseInt($("#maxim_price").val()) ) ;
-
-      $(".score")[i].innerHTML = (score);       
+    var _player = players.find(function(p) {
+      return p.id === player_id;
     });
+
+    _player.name = $("#name_player_input").val();
+    // _player.currency = $("#currency_player_input").val();
+    _player.score = 0;//parseInt(_player.currency);
+    _player.stocks.forEach(function(stock, i){
+      _player.stocks[i].quantity = parseInt($("#"+stock.name+"_player_input").val());
+      _player.score += parseInt(_player.stocks[i].quantity) * parseInt(companies[i].price);
+    });
+  
+    $(".player_name[data-guid='"+_player.id+"'] .name").html(_player.name);
+    $(".score[data-guid='"+_player.id+"']").html(_player.score);
+
     $('#modal--player_add').modal('toggle');
 
     $("#name_player_input").val('');
-
+    $("#currency_player_input").val(0);
     $("#edison_player_input").val(0);     
     $("#tesla_player_input").val(0);
     $("#brush_player_input").val(0);  
@@ -477,6 +504,7 @@ $('#modal--stock_price .modal-footer .btn').click(function(){
   }
 
 })(jQuery);
+
 </script>
 
 </body>
