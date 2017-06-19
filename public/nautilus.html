@@ -360,45 +360,42 @@ var clone = function(data){
   var html = '';
   var players = [];
 
+  $(".btnStockPrices").click(function(){
+    $('#modal--stock_price').modal('toggle');
+
+  });
+
+  $('#modal--stock_price').modal({
+    show:false
+  });
 
 
+  $(".btnPlayerScores").click(function(){
+    if($("#gold_price").val() == ''){
+      var klass = 'messages';
+      $('.messages').prepend('<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>Please enter the stock prices first.</div>');
 
-$(".btnStockPrices").click(function(){
-  $('#modal--stock_price').modal('toggle');
+      $('.messages .alert').fadeTo(2000, 500).slideUp(500, function(){
+        $('.message .alert').slideUp(500);
+        $('.messages .alert').remove();
+      });
 
-});
+      return false;
+    }
+    $('#modal--player_add').modal('toggle');
 
-$('#modal--stock_price').modal({
-  show:false
-});
+  });
 
+  $('#modal--player_add').modal({
+    show:false
+  });
 
-$(".btnPlayerScores").click(function(){
-  if($("#gold_price").val() == ''){
-    var klass = 'messages';
-    $('.messages').prepend('<div class="alert alert-warning alert-dismissible fade in" role="alert"> <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">×</span></button> <strong>Please enter the stock prices first.</div>');
-
-    $('.messages .alert').fadeTo(2000, 500).slideUp(500, function(){
-      $('.message .alert').slideUp(500);
-      $('.messages .alert').remove();
-    });
-
-    return false;
-  }
-  $('#modal--player_add').modal('toggle');
-
-});
-
-$('#modal--player_add').modal({
-  show:false
-});
-
-$('#modal--stock_price .modal-footer .btn').click(function(){
-  $('#modal--stock_price').modal('toggle');
-  for(var z=0,len=companies.length;z<len;z++){
-    companies[z].price = parseInt( $("#"+companies[z].name+'_price_input').val() );
-  }
-});
+  $('#modal--stock_price .modal-footer .btn').click(function(){
+    $('#modal--stock_price').modal('toggle');
+    for(var z=0,len=companies.length;z<len;z++){
+      companies[z].price = parseInt( $("#"+companies[z].name+'_price_input').val() );
+    }
+  });
 
   var existingPlayer = false;
 
