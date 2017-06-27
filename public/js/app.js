@@ -37,7 +37,7 @@ $( document ).ready(function() {
 
   /**** Navigation Tab Events ******/
   $(".player_block").on('click', function(){
-    socket.emit('get_player_totals', { game_oid: game_oid, user: user });
+    socket.emit('get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
   });
 
   /*** Modal Setup ******/
@@ -91,11 +91,9 @@ $( document ).ready(function() {
         localStorage.setItem("game-scoring--email", $("#email").val() );
         localStorage.setItem("game-scoring--fullname", $("#name").val() );
 
-        var current_location = JSON.parse(localStorage.getItem("game-scoring--current_location"));
-
         var action = (_id == 'new') ? 'add_game_instance' : 'join_game_instance';
 
-        socket.emit('save_username', {tag: username, email: $("#email").val(), name: $("#name").val(), location: current_location });
+        socket.emit('save_username', {tag: username, email: $("#email").val(), name: $("#name").val() });
 
         setUserRoom();
 
@@ -105,7 +103,7 @@ $( document ).ready(function() {
               _id: $('.available_games_dd .dropdown.selected a').data('oid'),
               num_players: $('.num_players .dropdown.selected a').data('numplayers')
             },
-            user: {tag: username, name: $("#name").val(), email: $("#email").val(), location: current_location }
+            user: {tag: username, name: $("#name").val(), email: $("#email").val() }
           }
         );
 
@@ -123,12 +121,13 @@ $( document ).ready(function() {
     socket.emit('get_stock_values', {
       game_oid: game_oid,
       purchase: true,
-      user: user
+      user: user,
+      client: user+'_conDiv'
     });
 
     socket.emit('get_players', {
       game_oid: game_oid,
-      client: user
+      client: user+'_conDiv'
     });
     
 
@@ -190,6 +189,7 @@ $( document ).ready(function() {
     socket.emit('modify_railroad_income', {
       game_oid: game_oid,
       user: user,
+      client: user+'_conDiv',
       company: current_company
     });
     removeBackdrop();
@@ -224,7 +224,7 @@ $( document ).ready(function() {
 
   $("#modal--username .btn-warning").click(function(){
     $("#available_games_dd").append('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span>');
-    socket.emit('available_games', {name: game_name, location: {lat: 0, lon: 0 }, game_oid: game_oid, email: $("#email").val() }); 
+    socket.emit('available_games', {name: game_name, game_oid: game_oid, email: $("#email").val() }); 
   });
 
   $('.modal .spinner .btn:first-of-type').on('click', function() {
@@ -373,7 +373,7 @@ $( document ).ready(function() {
 
   function calculateEndOfRound(){
     if(current_round <= 8){
-      socket.emit('end_of_round', { game_oid: game_oid, user: user });
+      socket.emit('end_of_round', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     }
   }
 
@@ -517,7 +517,7 @@ $( document ).ready(function() {
     socket.emit('subtract_costs', {
       game_oid: game_oid,
       company: current_company.tag,
-      client: user,
+      client: user+'_conDiv',
       costs: $('#rr_costs').val()
     });
   }
@@ -574,7 +574,7 @@ $( document ).ready(function() {
       user: $('.player_name select').val(),
       num_purchased_stocks: parseInt($(".num_purchased_stocks input").val()),
       purchase_price: parseInt($(".purchase_price input").val()),
-      client: user
+      client: user+'_conDiv'
     });
   }
 
@@ -659,54 +659,16 @@ $( document ).ready(function() {
   }
 
 
-/**** GeoLocation ******/
-
-
-  function greatCircleDistance(loc1, loc2) {
-    var lat1 = loc1[0], lon1 = loc1[1], lat2 = loc2[0], lon2 = loc2[1];
-    var R = 3959; // Radius of the earth in miles
-    var dLat = (lat2 - lat1) * Math.PI / 180;  // deg2rad below
-    var dLon = (lon2 - lon1) * Math.PI / 180;
-    var a =
-       0.5 - Math.cos(dLat)/2 +
-       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-       (1 - Math.cos(dLon))/2;
-
-    return R * 2 * Math.asin(Math.sqrt(a));
-  }
-
   if(getQueryVariable('game_id')){
     game_oid = getQueryVariable('game_id');
   }
 
-  if ("geolocation" in navigator) {
-    /* geolocation is available */
-  } else {
-    alert("GeoLocation is not available");
-    getAvailableGames({lat: 0, lon: 0 });
-  }
+  getAvailableGames();
+  
 
-  var geo_options = {
-    enableHighAccuracy: false,
-    timeout: 5000,
-    maximumAge: Infinity
-  };
-
-  navigator.geolocation.getCurrentPosition(
-    function(position) {
-      var coords = {lat: position.coords.latitude, lon: position.coords.longitude };
-      localStorage.setItem("game-scoring--current_location", JSON.stringify(coords) );
-
-      getAvailableGames(coords)
-    }, 
-    function(err) {
-      getAvailableGames({lat: 0, lon: 0 });
-    }, geo_options
-  );
-
-  function getAvailableGames(coords){
+  function getAvailableGames(){
     $("#available_games_dd").append('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span>');
-    socket.emit('available_games', {name: game_name, location: coords, game_oid: game_oid});
+    socket.emit('available_games', {name: game_name, game_oid: game_oid});
   }
 
   var setBuyStockDialog = function(obj){
@@ -869,7 +831,7 @@ $( document ).ready(function() {
     updateRound(msg.current_round, msg.scoring);
 
     if( msg.newest_user == user && $(".player_block.active").length > 0){
-      socket.emit('get_player_totals', { game_oid: game_oid, user: user });
+      socket.emit('get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     }
 
   });
@@ -902,11 +864,11 @@ $( document ).ready(function() {
     }
 
     if($("#modal--player-dividend").hasClass('in')){
-      socket.emit('get_player_dividends', { game_oid: game_oid, user: user });
+      socket.emit('get_player_dividends', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     }
 
     if($("li.player_block").hasClass('active')){
-      socket.emit('get_player_totals', { game_oid: game_oid, user: user });
+      socket.emit('get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     }
   });
 
@@ -929,7 +891,7 @@ $( document ).ready(function() {
 
   socket.on('end_of_round', function(obj){
     if($("li.player_block").hasClass('active')){
-      socket.emit('get_player_totals', { game_oid: game_oid, user: user });
+      socket.emit('get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     }
     if($(".company_pane .btn.active").length > 0){
       socket.emit('get_company', { game_oid: game_oid, company_name: $(".company_pane .btn.active").text().toLowerCase() });
@@ -958,7 +920,7 @@ $( document ).ready(function() {
   });
 
   function setUserRoom(){
-    nsp_socket = io('/'+user );
+    nsp_socket = io('/'+user+'_conDiv' );
 
     nsp_socket.on('close_purchase_window', function(company){
       $('#modal--buyStock').modal('hide');
