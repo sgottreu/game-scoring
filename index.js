@@ -11,8 +11,11 @@ var monk = require('monk');
 var moment = require('moment');
 
 var morgan = require('morgan');
+var dotenv = require('dotenv');
 
 var mongodb_config = (process.env.mongodb) ? process.env.mongodb : process.argv[2];
+mongodb_config = (!mongodb_config) ? dotenv['mongodb'] : mongodb_config;
+
 var mongo_url = 'mongodb://'+mongodb_config;
 var db = monk(mongo_url);
 
@@ -35,7 +38,7 @@ app.use(bodyParser.urlencoded({ extended: false }))
 // parse application/json
 app.use(bodyParser.json());
 
-var port = process.env.PORT || '3000';
+var port = process.env.PORT || '4000';
 app.set('port', port);
 
 app.use(express.static('public'));
@@ -45,7 +48,7 @@ app.get('/', function(req, res){
 });
 
 app.get('/continental_divide', function(req, res){
-  res.sendFile(__dirname + '/public/continental_divide.html');
+  res.sendFile(__dirname + '/public/continental_divide/index.html');
 });
 
 app.get('/nautilus', function(req, res){
@@ -66,7 +69,7 @@ app.get('/masters_of_venice', function(req, res){
 
 app.get('/game/:game_id', function(req, res){
   var game_id = req.params.game_id;
-  res.redirect('/continental_divide.html?gameid='+game_id);
+  res.redirect('/continental_divide/index.html?gameid='+game_id);
 });
 
 
@@ -213,7 +216,7 @@ function calculateScore(game_id, vp){
 }
 
 function createNamespace(user){
-  var np = keyify(user.tag);
+  var np = keyify(user.tag)+'_conDiv';
 
   nsp_socket[np] = io.of('/'+np);
   nsp_socket[np].on('connection', function(socket){
@@ -223,25 +226,23 @@ function createNamespace(user){
 
 function emitAvailableGames(io, game){
 	var available_games = db.get(db_collection);
-  available_games.find({ name: game.name }).then(function(docs) {
+
+
+  available_games.find({ name: game.name }).then(function(docs) { //
+
     for(var x=0,len=docs.length;x<len;x++){
-			docs[x] = setGameAttrib(docs[x], game._id, game.location);
+			docs[x] = setGameAttrib(docs[x], game._id);
 		}
     docs = (game.email !== undefined) ? getGamesByEmail(docs, game) : getNearbyGames(docs, game);
-
   	io.emit('available_games', docs);
   });
 }
 
 function getNearbyGames(docs, game){
-  docs.sort(compareDistance);
-
   var nearby = [], _id = game.game_oid;
   var past_date = moment().subtract(7, 'days').format('YYYY-MM-DD');
 
   for(var x=0,len=docs.length;x<len;x++){
-    if(docs[x].distance <= 20 && docs[x].distance > -1){ //
-
       if(docs[x].completed == 0  && moment(docs[x]._date).isAfter(past_date)){
         nearby.push(docs[x]);
       } else { // If url is used & game is complete
@@ -251,14 +252,7 @@ function getNearbyGames(docs, game){
           }
         }
       }
-    } else {
-      if(_id !== undefined){
-        if(_id == docs[x]._id){
-          docs[x].distance = 'N/A';
-          nearby.push(docs[x]);
-        }
-      }
-    }
+    
   }
   return nearby;
 }
@@ -281,27 +275,6 @@ function getGamesByEmail(docs, game){
   }
 
   return nearby;
-}
-
-function greatCircleDistance(loc1, loc2) {
-  var lat1 = loc1[0], lon1 = loc1[1], lat2 = loc2[0], lon2 = loc2[1];
-  var R = 3959; // Radius of the earth in miles
-  var dLat = (lat2 - lat1) * Math.PI / 180;  // deg2rad below
-  var dLon = (lon2 - lon1) * Math.PI / 180;
-  var a =
-     0.5 - Math.cos(dLat)/2 +
-     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-     (1 - Math.cos(dLon))/2;
-
-  return R * 2 * Math.asin(Math.sqrt(a));
-}
-
-function compareDistance(a,b) {
-  if (a.distance < b.distance)
-    return -1;
-  if (a.distance > b.distance)
-    return 1;
-  return 0;
 }
 
 function compareVictoryPoints(a,b) {
@@ -346,12 +319,12 @@ function joinGameInstance(io, obj){
         game
       ).then(function(docs) {
         console.log('Joining game');
-        docs = setGameAttrib(docs, obj.game._id, obj.user.location, obj.user);
+        docs = setGameAttrib(docs, obj.game._id, obj.user);
         io.emit('joined_game', docs);
       });
     } else {
       console.log('Joining game already a part of');
-      game = setGameAttrib(game, obj.game._id, obj.user.location, obj.user);
+      game = setGameAttrib(game, obj.game._id, obj.user);
       io.emit('joined_game', game);
     }
   });
@@ -439,27 +412,18 @@ function savePlayerDividends(obj){
     available_games.update( { "_id" : monk.id(obj.game_oid) }, game )
       .then(function(upd_game){
         console.log('Player treasuries updated');
-        nsp_socket[obj.user].emit('close_player_dividend_window', true);
+        nsp_socket[obj.client].emit('close_player_dividend_window', true);
         saveCompanyDividends(obj);
     });
   });
 }
 
-function setGameAttrib(game, _id, location, user){
+function setGameAttrib(game, _id, user){
   game.date = moment(game._id.getTimestamp()).format("MM/DD/YYYY");
   game._date = moment(game._id.getTimestamp());
   game.selected = (_id !== undefined && _id.toString() == game._id.toString()) ? true : false;
   if(user !== undefined){
     game.newest_user = keyify(user.tag);
-  }
-
-  var game_loc = game.location;
-
-  if(location !== null && game_loc !== null){
-    game.distance = greatCircleDistance([location.lat, location.lon], [game_loc.lat, game_loc.lon]);
-    game.distance = Math.round((game.distance + 0.00001) * 1000) / 1000;
-  } else {
-    game.distance = -1;
   }
 
   return game;
@@ -475,6 +439,7 @@ function getPlayers(obj){
         players.push({name: game.users[u].name, tag: keyify(game.users[u].tag) });
       }
     }
+
     nsp_socket[obj.client].emit('get_players', players);
 
   });
@@ -540,7 +505,7 @@ function updateRailroadIncome(obj){
       db_game.companies[obj.company.tag].stockholders = getStockHolders(db_game, obj.company.tag, 'updateRailroadIncome');
       io.emit('update_company', db_game.companies[ obj.company.tag ]);
       console.log('Company updated');
-      nsp_socket[obj.user].emit('close_income_window', true);
+      nsp_socket[obj.client].emit('close_income_window', true);
       console.log('Send Close Window');
     });
   });
@@ -576,7 +541,7 @@ function getPlayerTotals(obj){
 
     var totals = calcPlayerDividend(db_game.users[obj.user], db_game.companies);
 
-    nsp_socket[obj.user].emit('get_player_totals', totals);
+    nsp_socket[obj.client].emit('get_player_totals', totals);
 
   });
 }
@@ -596,10 +561,7 @@ function getPlayerDividends(obj){
         users[user].tag = keyify(db_game.users[user].tag);
       }
     }
-
-    // nsp_socket[obj.user].emit('get_player_dividends', users);
     io.emit('get_player_dividends', users);
-
   });
 }
 
