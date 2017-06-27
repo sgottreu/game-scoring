@@ -243,30 +243,27 @@ function getNearbyGames(docs, game){
   var past_date = moment().subtract(7, 'days').format('YYYY-MM-DD');
 
   for(var x=0,len=docs.length;x<len;x++){
-      if(docs[x].completed == 0  && moment(docs[x]._date).isAfter(past_date)){
-        nearby.push(docs[x]);
-      } else { // If url is used & game is complete
-        if(_id !== undefined){
-          if(_id == docs[x]._id){
-            nearby.push(docs[x]);
-          }
+    if(docs[x].completed == 0  && moment(docs[x]._date).isAfter(past_date)){
+      nearby.push(docs[x]);
+    } else { // If url is used & game is complete
+      if(_id !== undefined){
+        if(_id == docs[x]._id){
+          nearby.push(docs[x]);
         }
       }
+    }
     
   }
   return nearby;
 }
 
 function getGamesByEmail(docs, game){
-  docs.sort(compareDistance);
-
   var nearby = [], _id = game.game_oid, email = game.email;
   var past_date = moment().subtract(7, 'days').format('YYYY-MM-DD');
 
   for(var x=0,len=docs.length;x<len;x++){
     for ( var u in docs[x].users ) {
       if (docs[x].users.hasOwnProperty(u)) {
-        docs[x].distance = -1;
         if( docs[x].users[u].email == game.email && moment(docs[x]._date).isAfter(past_date) ){
           nearby.push(docs[x]);
         } 
