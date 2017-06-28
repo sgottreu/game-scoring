@@ -208,6 +208,10 @@ input[type="number"] { width: 40px; }
   text-align: right;
 }
 
+@media (max-width: 960px) {
+  .player_stocks .panel-body .name { width: 150px !important; }
+}
+
 /********** Victory Points *********/
 
 #modal--victory-points .panel-body li {
@@ -377,19 +381,22 @@ input[type="number"] { width: 40px; }
 
 
       <div class="row company_pane__fields  company-action-btns hidden">
-        <div class="col-xs-4 col-sm-3 col-md-3"> 
+        <div class="col-xs-3 col-sm-3 col-md-3"> 
           <button type="button" class="btn btn-primary purchaseCompanyStock hidden" autocomplete="off"> 
-            Purchase Stock
+            <!--Purchase Stock-->
+            <i class="fa fa-line-chart" aria-hidden="true"></i>
           </button> 
         </div>
-        <div class="col-xs-4 col-sm-3 col-md-3"> 
+        <div class="col-xs-3 col-sm-3 col-md-3"> 
           <button type="button" class="btn btn-primary increaseCompanyIncome hidden" autocomplete="off"> 
-            Increase Income
+            <!--Increase Income-->
+            <i class="fa fa-arrow-up" aria-hidden="true"></i> <i class="fa fa-usd" aria-hidden="true"></i>
           </button> 
         </div>
-        <div class="col-xs-4 col-sm-3 col-md-3"> 
+        <div class="col-xs-3 col-sm-3 col-md-3"> 
           <button type="button" class="btn btn-primary decreaseCompanyCosts hidden" autocomplete="off"> 
-            Subtract Building Costs
+            <i class="fa fa-building-o" aria-hidden="true"></i>
+            <!--Subtract Building Costs-->
           </button> 
         </div>
       </div>

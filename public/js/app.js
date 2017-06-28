@@ -114,7 +114,7 @@ $( document ).ready(function() {
   });
 
   $(".purchaseCompanyStock").click(function(){
-    $(this).html('Purchase Stock <i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span>')
+    $(this).html('<i class="fa fa-line-chart" aria-hidden="true"></i> <i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span>')
     waiting.get_stock_values = true;
     waiting.get_players = true;
 
@@ -133,7 +133,7 @@ $( document ).ready(function() {
 
     var checkWaiting =window.setInterval(function(){
       if(!waiting.get_players && !waiting.get_stock_values){
-        $(".purchaseCompanyStock").html('Purchase Stock');
+        $(".purchaseCompanyStock").html('<i class="fa fa-line-chart" aria-hidden="true"></i>');
         finalizePurchaseStockDialog();
         clearInterval(checkWaiting);
       } 
