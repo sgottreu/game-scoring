@@ -2,7 +2,7 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var express = require('express');
-
+// const debug = require('debug')('http');
 var bodyParser = require('body-parser');
 var db_collection = "game-scoring--games";
 
@@ -18,10 +18,6 @@ mongodb_config = (!mongodb_config) ? dotenv['mongodb'] : mongodb_config;
 
 var mongo_url = 'mongodb://'+mongodb_config;
 var db = monk(mongo_url);
-
-var nsp_socket = [];
-
-
 
 
 var base_io = require('./src/index')(io);

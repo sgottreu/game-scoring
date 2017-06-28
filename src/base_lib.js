@@ -1,19 +1,18 @@
-
-
-
+var moment = require('moment');
 
 exports = module.exports = function(io) {
   var keyify = function(key){
     return key.replace(/[@\.]/g, '_');
   };
 
-  var createNamespace = function(user, game){
+  var createNamespace = function(nsp_socket, user, game){
     var np = keyify(user.tag)+'_'+game;
 
     nsp_socket[np] = io.of('/'+np);
     nsp_socket[np].on('connection', function(socket){
         console.log(user.tag+' connected to nsp channel: '+np);
     });
+    return nsp_socket;
   };
 
   var inArray = function(needle, haystack) {
@@ -62,6 +61,7 @@ exports = module.exports = function(io) {
 
 
   return {
+    nsp_socket: {},
     keyify : keyify,
     createNamespace: createNamespace,
     inArray: inArray,
