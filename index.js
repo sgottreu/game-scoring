@@ -22,6 +22,7 @@ var db = monk(mongo_url);
 
 var base_io = require('./src/index')(io);
 var continental_divide_io = require('./src/continential_divide')(io, db);
+var masters_of_venice_io = require('./src/masters_of_venice')(io, db);
 
 app.use(morgan('combined'));
 
