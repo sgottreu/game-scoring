@@ -91,7 +91,7 @@ $( document ).ready(function() {
         localStorage.setItem("game-scoring--email", $("#email").val() );
         localStorage.setItem("game-scoring--fullname", $("#name").val() );
 
-        var action = (_id == 'new') ? 'add_game_instance' : 'join_game_instance';
+        var action = (_id == 'new') ? 'conDiv_add_game_instance' : 'conDiv_join_game_instance';
 
         socket.emit('conDiv_save_username', {tag: username, email: $("#email").val(), name: $("#name").val() });
 

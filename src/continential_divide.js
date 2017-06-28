@@ -1,7 +1,12 @@
+var moment = require('moment');
+var monk = require('monk');
+
 
 exports = module.exports = function(io, db){
   var baseLib = require('./base_lib')(io);
   var db_collection = "game-scoring--games";
+
+  var nsp_socket = baseLib.nsp_socket;
 
   var companies = ['blue','red', 'yellow', 'pink', 'green', 'brown', 'purple', 'black'];
 
@@ -35,7 +40,7 @@ exports = module.exports = function(io, db){
     });
 
     socket.on('conDiv_save_username', function(user){
-        baseLib.createNamespace(user, 'conDiv');
+        nsp_socket = baseLib.createNamespace(nsp_socket, user, 'conDiv');
         io.emit('conDiv_conDiv_save_username', user);
     });
 
@@ -157,21 +162,13 @@ exports = module.exports = function(io, db){
     available_games.find({ name: game.name }).then(function(docs) { //
 
       for(var x=0,len=docs.length;x<len;x++){
-              docs[x] = setGameAttrib(docs[x], game._id);
-          }
+          docs[x] = setGameAttrib(docs[x], game._id);
+      }
       docs = (game.email !== undefined) ? baseLib.getGamesByEmail(docs, game) : baseLib.getNearbyGames(docs, game);
 
-      io.emit('conDiv_available_games', docs, function (data) {
-        if (data.error) 
-          console.log('Something went wrong on the server');
-
-        if (data.ok)
-          console.log('Event was processed successfully');
-      });
+      io.emit('conDiv_available_games', docs);
     });
   }
-
-
 
   function compareVictoryPoints(a,b) {
     if (a.vp < b.vp)
@@ -315,14 +312,14 @@ exports = module.exports = function(io, db){
     }
 
     function setGameAttrib(game, _id, user){
-    game.date = moment(game._id.getTimestamp()).format("MM/DD/YYYY");
-    game._date = moment(game._id.getTimestamp());
-    game.selected = (_id !== undefined && _id.toString() == game._id.toString()) ? true : false;
-    if(user !== undefined){
-        game.newest_user = baseLib.keyify(user.tag);
-    }
+      game.date = moment(game._id.getTimestamp()).format("MM/DD/YYYY");
+      game._date = moment(game._id.getTimestamp());
+      game.selected = (_id !== undefined && _id.toString() == game._id.toString()) ? true : false;
+      if(user !== undefined){
+          game.newest_user = baseLib.keyify(user.tag);
+      }
 
-    return game;
+      return game;
     }
 
     function getPlayers(obj){
