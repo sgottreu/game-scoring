@@ -30,11 +30,24 @@ exports = module.exports = function(io, db){
       emitAvailableGames(game);
     });
 
-    // socket.on('masVen_save_username', function(user){
-    //   io.emit('masVen_save_username', user);
-    // });
+    socket.on('masVen_update_state', function(state){
+      console.log('socket -- masVen_update_state');
+      updateState(state);
+    });
   });
 
+  function updateState(obj){
+    var available_games = db.get(db_collection);
+
+    console.log('masVen_update_state');
+    available_games.findOneAndUpdate(
+        { "_id" : monk.id(obj._id) },
+        obj.state
+    ).then(function(docs) {
+        io.emit('masVen_update_state', docs);
+    });
+
+  }
 
   function emitAvailableGames(game){
     var available_games = db.get(db_collection);
@@ -44,8 +57,7 @@ exports = module.exports = function(io, db){
       for(var x=0,len=docs.length;x<len;x++){
           docs[x] = setGameAttrib(docs[x], game._id);
       }
-      docs = (game.email !== undefined) ? baseLib.getGamesByEmail(docs, game) : baseLib.getNearbyGames(docs, game);
-console.log('Processed '+docs.length+' docs');
+      console.log('masVen_available_games');
       io.emit('masVen_available_games', docs);
     });
   }
@@ -70,8 +82,9 @@ console.log('Processed '+docs.length+' docs');
       console.log('Attempting to join game');
 
       available_games.findOne({ "_id" : monk.id(obj.game._id) }).then(function(game) {
-          console.log('game found');
-          if(game.users[ baseLib.keyify(obj.user.tag) ] === undefined){
+        console.log('game found');
+        console.log(game);
+        //if(game.users[ baseLib.keyify(obj.user.tag) ] === undefined){
 
           available_games.findOneAndUpdate(
               { "_id" : monk.id(obj.game._id) },
@@ -81,11 +94,11 @@ console.log('Processed '+docs.length+' docs');
               docs = setGameAttrib(docs, obj.game._id, obj.user);
               io.emit('masVen_joined_game', docs);
           });
-          } else {
-          console.log('Joining game already a part of');
-          game = setGameAttrib(game, obj.game._id, obj.user);
-          io.emit('masVen_joined_game', game);
-          }
+        // } else {
+        //   console.log('Joining game already a part of');
+        //   game = setGameAttrib(game, obj.game._id, obj.user);
+        //   io.emit('masVen_joined_game', game);
+        // }
       });
   }
 
@@ -107,7 +120,7 @@ console.log('Processed '+docs.length+' docs');
       var game_obj = {
           user: key,
           name: obj.game.name,
-          state: obj.state,
+          state: obj.game.state,
           creator: obj.user,
       };
 
