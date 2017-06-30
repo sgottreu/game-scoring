@@ -42,9 +42,9 @@ exports = module.exports = function(io, db){
     console.log('masVen_update_state');
     available_games.findOneAndUpdate(
         { "_id" : monk.id(obj._id) },
-        obj.state
+        {$set: {'state': obj.state} }
     ).then(function(docs) {
-        io.emit('masVen_update_state', docs);
+        io.emit('masVen_update_state', docs.state);
     });
 
   }
@@ -83,8 +83,13 @@ exports = module.exports = function(io, db){
 
       available_games.findOne({ "_id" : monk.id(obj.game._id) }).then(function(game) {
         console.log('game found');
-        console.log(game);
-        //if(game.users[ baseLib.keyify(obj.user.tag) ] === undefined){
+
+        var player = game.state.players.find( p => {
+          return obj.user.username === p.username;
+        });
+
+        if(player === undefined){
+          game.state = addPlayerToGame(obj.user, game.state);
 
           available_games.findOneAndUpdate(
               { "_id" : monk.id(obj.game._id) },
@@ -94,11 +99,11 @@ exports = module.exports = function(io, db){
               docs = setGameAttrib(docs, obj.game._id, obj.user);
               io.emit('masVen_joined_game', docs);
           });
-        // } else {
-        //   console.log('Joining game already a part of');
-        //   game = setGameAttrib(game, obj.game._id, obj.user);
-        //   io.emit('masVen_joined_game', game);
-        // }
+        } else {
+          console.log('Joining game already a part of');
+          game = setGameAttrib(game, obj.game._id, obj.user);
+          io.emit('masVen_joined_game', game);
+        }
       });
   }
 
@@ -106,25 +111,25 @@ exports = module.exports = function(io, db){
     game.date = moment(game._id.getTimestamp()).format("MM/DD/YYYY");
     game._date = moment(game._id.getTimestamp());
     game.selected = (_id !== undefined && _id.toString() == game._id.toString()) ? true : false;
-    if(user !== undefined){
-        game.newest_user = baseLib.keyify(user.tag);
-    }
 
     return game;
   }
 
   function buildGameInstance(obj){
-      var comp, user = {};
-      key = baseLib.keyify(obj.user.tag);
+    obj.game.state = addPlayerToGame(obj.user, obj.game.state);
 
-      var game_obj = {
-          user: key,
-          name: obj.game.name,
-          state: obj.game.state,
-          creator: obj.user,
-      };
+    var game_obj = {
+        name: obj.game.name,
+        state: obj.game.state,
+        creator: { username: obj.user.username, name: obj.user.name },
+    };
+    return game_obj;
+  }
 
-      return game_obj;
+  addPlayerToGame = (user, state) => {
+    state.players.push(user);
+
+    return state;
   }
 
 
