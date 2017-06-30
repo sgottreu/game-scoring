@@ -37,7 +37,7 @@ $( document ).ready(function() {
 
   /**** Navigation Tab Events ******/
   $(".player_block").on('click', function(){
-    socket.emit('get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
+    socket.emit('conDiv_get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
   });
 
   /*** Modal Setup ******/
@@ -91,9 +91,9 @@ $( document ).ready(function() {
         localStorage.setItem("game-scoring--email", $("#email").val() );
         localStorage.setItem("game-scoring--fullname", $("#name").val() );
 
-        var action = (_id == 'new') ? 'add_game_instance' : 'join_game_instance';
+        var action = (_id == 'new') ? 'conDiv_add_game_instance' : 'conDiv_join_game_instance';
 
-        socket.emit('save_username', {tag: username, email: $("#email").val(), name: $("#name").val() });
+        socket.emit('conDiv_save_username', {tag: username, email: $("#email").val(), name: $("#name").val() });
 
         setUserRoom();
 
@@ -114,18 +114,18 @@ $( document ).ready(function() {
   });
 
   $(".purchaseCompanyStock").click(function(){
-    $(this).html('Purchase Stock <i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span>')
+    $(this).html('<i class="fa fa-line-chart" aria-hidden="true"></i> <i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span>')
     waiting.get_stock_values = true;
     waiting.get_players = true;
 
-    socket.emit('get_stock_values', {
+    socket.emit('conDiv_get_stock_values', {
       game_oid: game_oid,
       purchase: true,
       user: user,
       client: user+'_conDiv'
     });
 
-    socket.emit('get_players', {
+    socket.emit('conDiv_get_players', {
       game_oid: game_oid,
       client: user+'_conDiv'
     });
@@ -133,7 +133,7 @@ $( document ).ready(function() {
 
     var checkWaiting =window.setInterval(function(){
       if(!waiting.get_players && !waiting.get_stock_values){
-        $(".purchaseCompanyStock").html('Purchase Stock');
+        $(".purchaseCompanyStock").html('<i class="fa fa-line-chart" aria-hidden="true"></i>');
         finalizePurchaseStockDialog();
         clearInterval(checkWaiting);
       } 
@@ -186,7 +186,7 @@ $( document ).ready(function() {
   $("#modal--income .modal-footer button").click(function(event){
     current_company.rr_income = parseInt( $("#rr_income").val(), 10);
 
-    socket.emit('modify_railroad_income', {
+    socket.emit('conDiv_modify_railroad_income', {
       game_oid: game_oid,
       user: user,
       client: user+'_conDiv',
@@ -198,7 +198,7 @@ $( document ).ready(function() {
   $(".showCompanyDividends").click(function(){
     $('#modal--company-dividend').modal('toggle');
     $("#modal--company-dividend .modal-header h5").html('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span> Loading Companies');
-    socket.emit('get_company_dividends', { game_oid: game_oid });
+    socket.emit('conDiv_get_company_dividends', { game_oid: game_oid });
   });
 
   $("#modal--company-dividend .modal-footer button").click(function(){
@@ -209,7 +209,7 @@ $( document ).ready(function() {
 
   $(".showPlayerDividends ").click(function(){
     $('#modal--player-dividend').modal('toggle');
-    socket.emit('get_player_dividends', { game_oid: game_oid });
+    socket.emit('conDiv_get_player_dividends', { game_oid: game_oid });
   });
 
   $("#modal--player-dividend .modal-footer button").click(function(){
@@ -224,7 +224,7 @@ $( document ).ready(function() {
 
   $("#modal--username .btn-warning").click(function(){
     $("#available_games_dd").append('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span>');
-    socket.emit('available_games', {name: game_name, game_oid: game_oid, email: $("#email").val() }); 
+    socket.emit('conDiv_available_games', {name: game_name, game_oid: game_oid, email: $("#email").val() }); 
   });
 
   $('.modal .spinner .btn:first-of-type').on('click', function() {
@@ -346,7 +346,7 @@ $( document ).ready(function() {
       $('.vp_company').addClass('hidden');
       $('.vp_'+company_name).removeClass('hidden');
     }
-    socket.emit('get_company', { game_oid: game_oid, company_name: company_name });
+    socket.emit('conDiv_get_company', { game_oid: game_oid, company_name: company_name });
   }
 
   function createGameLink(){
@@ -373,7 +373,7 @@ $( document ).ready(function() {
 
   function calculateEndOfRound(){
     if(current_round <= 8){
-      socket.emit('end_of_round', { game_oid: game_oid, user: user, client: user+'_conDiv' });
+      socket.emit('conDiv_end_of_round', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     }
   }
 
@@ -390,7 +390,7 @@ $( document ).ready(function() {
         obj[companies[x]][ victory_point_values[y].key ] = val;
       }
     }
-    socket.emit('score_game', { game_oid: game_oid, vp: obj });
+    socket.emit('conDiv_score_game', { game_oid: game_oid, vp: obj });
   }
 
   function finalizePurchaseStockDialog(){
@@ -514,7 +514,7 @@ $( document ).ready(function() {
   }
 
   function subtractCosts(){
-    socket.emit('subtract_costs', {
+    socket.emit('conDiv_subtract_costs', {
       game_oid: game_oid,
       company: current_company.tag,
       client: user+'_conDiv',
@@ -567,7 +567,7 @@ $( document ).ready(function() {
       company.remaining_stock = parseInt($(".stocks_issued input").val());
     }
 
-    socket.emit('update_company', {
+    socket.emit('conDiv_update_company', {
       game_oid: game_oid,
       action: action,
       company: company,
@@ -668,7 +668,7 @@ $( document ).ready(function() {
 
   function getAvailableGames(){
     $("#available_games_dd").append('<i class="fa fa-cog fa-spin fa-1x fa-fw"></i><span class="sr-only">Loading...</span>');
-    socket.emit('available_games', {name: game_name, game_oid: game_oid});
+    socket.emit('conDiv_available_games', {name: game_name, game_oid: game_oid});
   }
 
   var setBuyStockDialog = function(obj){
@@ -787,7 +787,7 @@ $( document ).ready(function() {
 
 /******** Socket IO commands *****/
 
-  socket.on('available_games', function(games){
+  socket.on('conDiv_available_games', function(games){
     var game_found = false;
     var html = '<li role="presentation" class="dropdown"><a href="#" class="dropdown-toggle" id="new_instance" data-toggle="dropdown" data-oid="new" role="button" aria-haspopup="true" aria-expanded="false">+ Add New Instance</a></li>';
     for(var x=0,len=games.length;x<len;x++){
@@ -822,7 +822,7 @@ $( document ).ready(function() {
     }
   });
 
-  socket.on('joined_game', function(msg){
+  socket.on('conDiv_joined_game', function(msg){
     game_oid = msg._id;
     user_treasuries[msg.newest_user] = msg.users[ msg.newest_user ].cash_total;
     log_actions(msg.newest_user+' has joined the game');
@@ -831,12 +831,12 @@ $( document ).ready(function() {
     updateRound(msg.current_round, msg.scoring);
 
     if( msg.newest_user == user && $(".player_block.active").length > 0){
-      socket.emit('get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
+      socket.emit('conDiv_get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     }
 
   });
 
-  socket.on('get_company', function(company){
+  socket.on('conDiv_get_company', function(company){
     log_actions('information about '+company.name+' requested');
 
     if($('.company_pane .btn.active') && company.tag == $('.company_pane .btn.active').text().toLowerCase() ){
@@ -852,7 +852,7 @@ $( document ).ready(function() {
     }
   });
 
-  socket.on('update_company', function(company){
+  socket.on('conDiv_update_company', function(company){
     var active_company = $(".company_pane .btn.active").text().toLowerCase();
 
     if(active_company == company.tag){
@@ -860,28 +860,28 @@ $( document ).ready(function() {
     }
 
     if($("#modal--company-dividend").hasClass('in')){
-      socket.emit('get_company_dividends', { game_oid: game_oid });
+      socket.emit('conDiv_get_company_dividends', { game_oid: game_oid });
     }
 
     if($("#modal--player-dividend").hasClass('in')){
-      socket.emit('get_player_dividends', { game_oid: game_oid, user: user, client: user+'_conDiv' });
+      socket.emit('conDiv_get_player_dividends', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     }
 
     if($("li.player_block").hasClass('active')){
-      socket.emit('get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
+      socket.emit('conDiv_get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     }
   });
 
-  socket.on('get_company_dividends', function(dividends){
+  socket.on('conDiv_get_company_dividends', function(dividends){
     updateCompanyDividends(dividends);
   });
 
-  socket.on('get_stock_values', function(obj){
+  socket.on('conDiv_get_stock_values', function(obj){
     setBuyStockDialog(obj);
     waiting.get_stock_values = false;
   });
 
-  socket.on('get_player_dividends', function(players){
+  socket.on('conDiv_get_player_dividends', function(players){
     for (var user in players) {
       if (players.hasOwnProperty(user)) {
         $('#modal--player-dividend .'+players[user].tag+' .panel-body').text(players[user].dividend_payment);
@@ -889,12 +889,12 @@ $( document ).ready(function() {
     }
   });
 
-  socket.on('end_of_round', function(obj){
+  socket.on('conDiv_end_of_round', function(obj){
     if($("li.player_block").hasClass('active')){
-      socket.emit('get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
+      socket.emit('conDiv_get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     }
     if($(".company_pane .btn.active").length > 0){
-      socket.emit('get_company', { game_oid: game_oid, company_name: $(".company_pane .btn.active").text().toLowerCase() });
+      socket.emit('conDiv_get_company', { game_oid: game_oid, company_name: $(".company_pane .btn.active").text().toLowerCase() });
     }
     updateRound(obj.current_round, obj.scoring);
     
@@ -908,7 +908,7 @@ $( document ).ready(function() {
     }
   });
 
-  socket.on('score_game', function(obj){
+  socket.on('conDiv_score_game', function(obj){
     $("#modal--victory-points .panel-body").html('');
     var html = '';
     for(var x=0,len=obj.length;x<len;x++){
@@ -922,31 +922,31 @@ $( document ).ready(function() {
   function setUserRoom(){
     nsp_socket = io('/'+user+'_conDiv' );
 
-    nsp_socket.on('close_purchase_window', function(company){
+    nsp_socket.on('conDiv_close_purchase_window', function(company){
       $('#modal--buyStock').modal('hide');
     });
 
-    nsp_socket.on('close_income_window', function(company){
+    nsp_socket.on('conDiv_close_income_window', function(company){
       $('#modal--income').modal('hide');
     });
 
-    nsp_socket.on('close_costs_window', function(company){
+    nsp_socket.on('conDiv_close_costs_window', function(company){
       $('#modal--costs').modal('hide');
     });
 
-    nsp_socket.on('close_company_dividend_window', function(company){
+    nsp_socket.on('conDiv_close_company_dividend_window', function(company){
       $('#modal--company-dividend').modal('hide');
     });
 
-    nsp_socket.on('close_player_dividend_window', function(company){
+    nsp_socket.on('conDiv_close_player_dividend_window', function(company){
       $('#modal--player-dividend').modal('hide');
     });
 
-    nsp_socket.on('get_players', function(players){
+    nsp_socket.on('conDiv_get_players', function(players){
       setPlayerDropdown(players);
     });
 
-    nsp_socket.on('get_player_totals', function(player){
+    nsp_socket.on('conDiv_get_player_totals', function(player){
       $('#user_treasury__txt').text(player.user_treasury);
       $('#player_dividend__txt').text(player.dividend_payment);
 
