@@ -15,6 +15,7 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "chai-http": "^3.0.0",
+    "debug": "https://registry.npmjs.org/debug/-/debug-2.2.0.tgz",
     "eslint": "^3.5.0",
     "eslint-config-google": "^0.6.0",
     "mocha": "^3.1.2",
