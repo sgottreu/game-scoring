@@ -1,0 +1,17 @@
+{
+  "name": "stone-age",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "react": "^16.1.1",
+    "react-dom": "^16.1.1",
+    "react-scripts": "1.0.17",
+    "react-tap-event-plugin": "^3.0.2"
+  },
+  "scripts": {
+    "start": "set DEBUG= && set NODE_ENV=development && set PORT=3000 && react-scripts start",
+    "build": "set DEBUG= && set NODE_ENV=production && react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  }
+}
