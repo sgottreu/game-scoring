@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import injectTapEventPlugin from 'react-tap-event-plugin';
+import LabelTextField from './LabelTextField';
 
 import './App.css';
 
@@ -92,74 +93,24 @@ class App extends Component {
             </tbody>
           </table>
         </div>
+        <LabelTextField _value={this.state.form.player_name} _label="Player's Name" _key={'player_name'} numeric={false} onHandleChange={this.handleChange} />
+
+        <LabelTextField _value={this.state.form.set1} _label="Set #1" _key={'set1'} numeric={true} onHandleChange={this.handleChange} />
+        <LabelTextField _value={this.state.form.set2} _label="Set #2" _key={'set2'} numeric={true} onHandleChange={this.handleChange} />
+        <LabelTextField _value={this.state.form.set3} _label="Set #3" _key={'set3'} numeric={true} onHandleChange={this.handleChange} />
+        <LabelTextField _value={this.state.form.set4} _label="Set #4" _key={'set4'} numeric={true} onHandleChange={this.handleChange} />
+        <LabelTextField _value={this.state.form.set5} _label="Set #5" _key={'set5'} numeric={true} onHandleChange={this.handleChange} />
+
+        <LabelTextField _value={this.state.form.farmers} _label="Farmers" _key={'farmers'} numeric={true} onHandleChange={this.handleChange} />
+        <LabelTextField _value={this.state.form.shamans} _label="Shamans" _key={'shamans'} numeric={true} onHandleChange={this.handleChange} />
+        <LabelTextField _value={this.state.form.builders} _label="Builders" _key={'builders'} numeric={true} onHandleChange={this.handleChange} />
+        <LabelTextField _value={this.state.form.tool_makers} _label="Tool Makers" _key={'tool_makers'} numeric={true} onHandleChange={this.handleChange} />
+        <LabelTextField _value={this.state.form.resources} _label="Resources" _key={'resources'} numeric={true} onHandleChange={this.handleChange} />
+
         <div className="row">
-          <form >
-            <div className="row">
-
-              <div className="form-group col-xs-12 col-md-8">
-                <label htmlFor="player_name">Player's Name</label>
-                <input type="text" className="form-control" id="player_name" placeholder="Player's Name" value={this.state.form.player_name} onChange={this.handleChange.bind(this, 'player_name')} />
-              </div>
-
-            </div>
-
-            <div className="row">
-              <div className="form-group col-xs-12 col-md-8">
-                <label htmlFor="set1">Set #1</label>
-                <input type="text" className="form-control" id="set1" placeholder="0" value={this.state.form.set1} onChange={this.handleChange.bind(this, 'set1')}/>
-              </div>
-              <div className="form-group col-xs-12 col-md-8">
-                <label htmlFor="set1">Set #2</label>
-                <input type="text" className="form-control" id="set2" placeholder="0" value={this.state.form.set2} onChange={this.handleChange.bind(this, 'set2')}/>
-              </div>
-              <div className="form-group col-xs-12 col-md-8">
-                <label htmlFor="set1">Set #3</label>
-                <input type="text" className="form-control" id="set3" placeholder="0" value={this.state.form.set3} onChange={this.handleChange.bind(this, 'set3')}/>
-              </div>
-              <div className="form-group col-xs-12 col-md-8">
-                <label htmlFor="set1">Set #4</label>
-                <input type="text" className="form-control" id="set4" placeholder="0" value={this.state.form.set4} onChange={this.handleChange.bind(this, 'set4')}/>
-              </div>
-              <div className="form-group col-xs-12 col-md-8">
-                <label htmlFor="set1">Set #5</label>
-                <input type="text" className="form-control" id="set5" placeholder="0" value={this.state.form.set5} onChange={this.handleChange.bind(this, 'set5')}/>
-              </div>
-            </div>
-            <div className="row">
-              <div className="form-group col-xs-12 col-md-8">
-                <label htmlFor="farmers">Farmers</label>
-                <input type="text" className="form-control" id="farmers" placeholder="0" value={this.state.form.farmers} onChange={this.handleChange.bind(this, 'farmers')}/>
-              </div>
-            </div>
-            <div className="row">
-              <div className="form-group col-xs-12 col-md-8">
-                <label htmlFor="shamans">shamans</label>
-                <input type="text" className="form-control" id="shamans" placeholder="0" value={this.state.form.shamans} onChange={this.handleChange.bind(this, 'shamans')}/>
-              </div>
-            </div>
-            <div className="row">
-              <div className="form-group col-xs-12 col-md-8">
-                <label htmlFor="tool_makers">tool_makers</label>
-                <input type="text" className="form-control" id="tool_makers" placeholder="0" value={this.state.form.tool_makers} onChange={this.handleChange.bind(this, 'tool_makers')}/>
-              </div>
-            </div>
-            <div className="row">
-              <div className="form-group col-xs-12 col-md-8">
-                <label htmlFor="builders">builders</label>
-                <input type="text" className="form-control" id="builders" placeholder="0" value={this.state.form.builders} onChange={this.handleChange.bind(this, 'builders')}/>
-              </div>
-            </div>
-            <div className="row">
-              <div className="form-group col-xs-12 col-md-8">
-                <label htmlFor="resources">resources</label>
-                <input type="text" className="form-control" id="resources" placeholder="0" value={this.state.form.resources} onChange={this.handleChange.bind(this, 'resources')}/>
-              </div>
-            </div>
-            <div className="row">
-              <button onClick={this.AddPlayer} className="btn btn-primary">Add Player</button>
-            </div>
-          </form>
+          <button onClick={this.AddPlayer} className="btn btn-primary">Add Player</button>
         </div>
+
       </div>
     );
   }
