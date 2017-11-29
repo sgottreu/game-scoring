@@ -63,6 +63,9 @@ app.get('/masters_of_venice', function(req, res){
   res.sendFile(__dirname + '/public/masters_of_venice/index.html');
 });
 
+app.get('/stone_age', function(req, res){
+  res.sendFile(__dirname + '/public/stone_age/index.html');
+});
 
 http.listen(port, function(){
   console.log('listening on *:'+port);

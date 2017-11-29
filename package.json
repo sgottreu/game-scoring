@@ -27,8 +27,8 @@
     "uglify-js": "^2.7.3"
   },
   "scripts": {
-    "start": "node index.js",
+    "start": "set DEBUG= && set NODE_ENV=production && node index.js",
     "test": "mocha --timeout 10000",
-    "dev": "nodemon index.js --ignore lib --port 4000"
+    "dev": "set DEBUG= && set NODE_ENV=development && nodemon index.js --ignore lib --port 4000"
   }
 }
