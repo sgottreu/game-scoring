@@ -11,8 +11,7 @@
 
 .resetApp {
   position: absolute;
-  bottom: 10px;
-  left: 20px;
+  right: 0px;
 }
 
 .hide {
@@ -52,7 +51,7 @@
   height: 150px;
   width: 250px;
   min-width: 200px;
-  margin: 20px;
+  margin: 10px 20px;
   text-align: center;
 }
 
@@ -109,7 +108,7 @@
   color: rgba(0, 0, 0, 0.87);
   padding-left: 30px;
   font-size: 18px;
-  width: 200px ;
+  width: 100px ;
   display: inline-block;
 }
 
@@ -168,12 +167,11 @@
 .ActionModal .shipping_offices {
   line-height: 24px;
   color: rgba(0, 0, 0, 0.87);
-  padding-left: 40px;
   font-size: 24px;
-  width: 200px;
+  width: 100%;
   display: inline-block;
-  position: absolute;
-  margin-top: 40px;
+  margin-left: -20px;
+  margin-bottom: 15px;
 }
 
 .player span {
@@ -264,4 +262,9 @@
 
 .ShopModal .radioBtns {
   width: 250px;
+}
+
+.ShopModal .radioBtns.stock_majority{
+  width: 100%;
+  display: block;
 }
