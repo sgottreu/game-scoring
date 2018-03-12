@@ -440,22 +440,25 @@ exports = module.exports = function(io, db){
     }
 
     function getPlayerDividends(obj){
-    var avail_game = db.get(db_collection);
-    console.log('get player dividends');
+      var avail_game = db.get(db_collection);
+      console.log('get player dividends');
 
-    avail_game.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(db_game) {
+      avail_game.findOne({ "_id" : monk.id(obj.game_oid) }).then(function(db_game) {
         console.log('Found game ');
 
         var users = {};
 
-        for (var user in db_game.users) {
-        if (db_game.users.hasOwnProperty(user)) {
-            users[user] = calcPlayerDividend(db_game.users[user], db_game.companies);
-            users[user].tag = baseLib.keyify(db_game.users[user].tag);
-        }
+        if(db_game !== null){
+          for (var user in db_game.users) {
+            if (db_game.users.hasOwnProperty(user)) {
+              users[user] = calcPlayerDividend(db_game.users[user], db_game.companies);
+              users[user].tag = baseLib.keyify(db_game.users[user].tag);
+              users[user].fullname = db_game.users[user].name;
+            }
+          }
         }
         io.emit('conDiv_get_player_dividends', users);
-    });
+      });
     }
 
     function calcDividend(stocks_issued, rr_income){

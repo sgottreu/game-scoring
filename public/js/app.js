@@ -37,6 +37,7 @@ $( document ).ready(function() {
 
   /**** Navigation Tab Events ******/
   $(".player_block").on('click', function(){
+    socket.emit('conDiv_get_player_dividends', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     socket.emit('conDiv_get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
   });
 
@@ -109,6 +110,8 @@ $( document ).ready(function() {
 
         user = username;
         $('#modal--username').modal('toggle');
+        $(".current_player").html(userFullname);
+        
         removeBackdrop();
       }
   });
@@ -178,7 +181,8 @@ $( document ).ready(function() {
   });
 
   $(".increaseCompanyIncome").click(function(){
-    $("#rr_income").val(current_company.rr_income);
+    $("#modal--income .rr_income .panel-body").html(current_company.rr_income);
+    $("#rr_income").val(0);
     $("#modal--income .modal-header h5").text( current_company.name );
     $('#modal--income').modal('toggle');
   });
@@ -284,8 +288,21 @@ $( document ).ready(function() {
     calculateEndOfRound();
   });
 
-  $(".spinner input").on("keyup", function(){
-    updateValue($(this), $(this).data('action') );
+  $(".spinner input").on("keyup", function(e){
+    var action = $(this).data('action');
+    var val = $(this);
+    var dir;
+    console.log(e.keyCode);
+    if(e.keyCode == 38){
+      dir = 'inc';
+    }
+    if(e.keyCode == 40){
+      dir = 'dec';
+    }
+    if((e.keyCode >= 48 && e.keyCode <= 57) || (e.keyCode >= 96 && e.keyCode <= 105)){
+      dir = 'enter';
+    }
+    updateValue($(this), action, dir );
   });
 
 });
@@ -407,6 +424,11 @@ $( document ).ready(function() {
   }
 
   function skipTakenStockValues(val,dir) {
+
+    // if((!inArray(val, stock_values)) && (val >= 10 && val <= 50)){
+    //   return val;
+    // }
+
     if(dir == 'inc'){
       if(val < 50){
         val++;
@@ -437,6 +459,11 @@ $( document ).ready(function() {
 
     switch (action) {
       case "stock_value":
+        if(dir !== undefined){
+          if(dir == 'enter') {
+            val--;
+          }
+        }
         var old_val = val;
         val = skipTakenStockValues(val,dir);
 
@@ -535,6 +562,7 @@ $( document ).ready(function() {
     $("#dividend__txt").text(company.dividend);
     $("#dividend_payment__txt").text(company.remaining_stock * company.dividend);
     $("#remaining_stock__txt").text(company.remaining_stock);
+    $("#income__txt").text(company.rr_income);
 
     $(".rr_treasury .panel-body").text(company.rr_treasury);
 
@@ -833,6 +861,7 @@ $( document ).ready(function() {
     if( msg.newest_user == user && $(".player_block.active").length > 0){
       socket.emit('conDiv_get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     }
+    socket.emit('conDiv_get_player_dividends', { game_oid: game_oid, user: user, client: user+'_conDiv' });
 
   });
 
@@ -868,6 +897,7 @@ $( document ).ready(function() {
     }
 
     if($("li.player_block").hasClass('active')){
+      socket.emit('conDiv_get_player_dividends', { game_oid: game_oid, user: user, client: user+'_conDiv' });
       socket.emit('conDiv_get_player_totals', { game_oid: game_oid, user: user, client: user+'_conDiv' });
     }
   });
@@ -882,11 +912,15 @@ $( document ).ready(function() {
   });
 
   socket.on('conDiv_get_player_dividends', function(players){
+    var html = '';
     for (var user in players) {
       if (players.hasOwnProperty(user)) {
         $('#modal--player-dividend .'+players[user].tag+' .panel-body').text(players[user].dividend_payment);
+
+        html += '<tr><td>'+players[user].fullname+'</td><td>'+players[user].user_treasury+'</td><tr>';
       }
     }
+    $("#collapsePlayers .table tbody").html(html);
   });
 
   socket.on('conDiv_end_of_round', function(obj){
